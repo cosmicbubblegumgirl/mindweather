@@ -1,0 +1,28 @@
+"use client";
+
+import { useMindWeather } from "@/hooks/useMindWeather";
+import type { ViewId } from "@/lib/types";
+import { forecastService } from "@/services/forecastService";
+import { Activity, ArrowUpRight, Brain, Clock3, CloudSun, Eye, Info, Sparkles, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+export function ForecastView({ navigate = () => undefined }: { navigate?(view: ViewId): void }) {
+  const { state } = useMindWeather();
+  const [range, setRange] = useState<"today" | "7" | "30">("7");
+  const observations = forecastService.observations(state);
+  const chartData = useMemo(() => state.weatherCheckins.slice(0, range === "30" ? 30 : range === "7" ? 7 : 1).reverse().map((checkin, index) => ({ name: new Date(checkin.createdAt).toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2), focus: checkin.focus, energy: checkin.energy, stress: checkin.stress, sessions: state.sessions.filter((session) => new Date(session.completedAt).toDateString() === new Date(checkin.createdAt).toDateString()).length, index })), [state.weatherCheckins, state.sessions, range]);
+  const byHour = [
+    { name: "Morning", focus: 58, complete: 63 }, { name: "Midday", focus: 69, complete: 72 }, { name: "Afternoon", focus: 91, complete: 88 }, { name: "Evening", focus: 54, complete: 46 },
+  ];
+  return <div className="forecast-page">
+    <header className="view-heading view-heading--row"><div><span className="view-heading__eyebrow">Brain Forecast</span><h1>Patterns, not predictions.</h1><p>Observations from your activity and self-reports. Nothing here is a scientific or medical claim.</p></div><div className="segmented"><button className={range === "today" ? "active" : ""} onClick={() => setRange("today")}>Today</button><button className={range === "7" ? "active" : ""} onClick={() => setRange("7")}>7 days</button><button className={range === "30" ? "active" : ""} onClick={() => setRange("30")}>30 days</button></div></header>
+    <section className="forecast-hero panel"><div className="forecast-orbit"><Brain /><i /><i /></div><div><span>THE STATION NOTICED</span><h2>You work differently on different days.<br />Your plan can too.</h2><p>{observations[0]}</p></div><aside><small>CONFIDENCE</small><strong>Emerging pattern</strong><span>Based on {state.weatherCheckins.length} check-ins and {state.sessions.length} sessions</span></aside></section>
+    <div className="forecast-grid">
+      <section className="chart-card panel chart-card--wide"><header><div><span>FOCUS + ENERGY</span><h3>Your week’s internal weather</h3></div><div className="chart-key"><i className="focus" />Focus <i className="energy" />Energy</div></header><div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={chartData} margin={{ left: -20, right: 8, top: 14, bottom: 0 }}><defs><linearGradient id="focusFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#a997ff" stopOpacity=".38"/><stop offset="1" stopColor="#a997ff" stopOpacity="0"/></linearGradient></defs><CartesianGrid vertical={false} stroke="rgba(255,255,255,.06)"/><XAxis dataKey="name" tick={{ fill: "#858197", fontSize: 10 }} axisLine={false} tickLine={false}/><YAxis domain={[0, 5]} tick={{ fill: "#706c82", fontSize: 9 }} axisLine={false} tickLine={false}/><Tooltip contentStyle={{ background: "#18152d", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, fontSize: 11 }}/><Area type="monotone" dataKey="focus" stroke="#a997ff" fill="url(#focusFill)" strokeWidth={2}/><Area type="monotone" dataKey="energy" stroke="#8fe7dd" fill="transparent" strokeWidth={2}/></AreaChart></ResponsiveContainer></div></section>
+      <section className="chart-card panel"><header><div><span>FOCUS BY TIME</span><h3>Afternoons are standing out</h3></div><Clock3 /></header><div className="chart-wrap chart-wrap--bar"><ResponsiveContainer width="100%" height="100%"><BarChart data={byHour} margin={{ left: -26, right: 2 }}><XAxis dataKey="name" tick={{ fill: "#858197", fontSize: 9 }} axisLine={false} tickLine={false}/><YAxis tick={{ fill: "#706c82", fontSize: 9 }} axisLine={false} tickLine={false}/><Tooltip contentStyle={{ background: "#18152d", border: "1px solid rgba(255,255,255,.12)", borderRadius: 12, fontSize: 11 }}/><Bar dataKey="focus" radius={[5,5,0,0]}>{byHour.map((item, index) => <Cell key={item.name} fill={index === 2 ? "#8fe7dd" : "#65599e"} />)}</Bar></BarChart></ResponsiveContainer></div></section>
+      <section className="forecast-metrics panel"><article><span><Activity /></span><div><small>SESSION COMPLETION</small><strong>{forecastService.completionRate(state)}%</strong><em><TrendingUp /> recent</em></div></article><article><span><CloudSun /></span><div><small>MOST COMMON WEATHER</small><strong>Brainy & breezy</strong><em>{state.weatherCheckins.filter((item) => item.weather === "breezy").length} check-ins</em></div></article><article><span><Eye /></span><div><small>MOST CONSISTENT METHOD</small><strong>Visual revision</strong><em>Higher completion</em></div></article></section>
+    </div>
+    <section className="observations-list"><header><div><Sparkles /><span><small>WHAT WE’VE NOTICED</small><h2>Useful signals, held lightly.</h2></span></div><span className="pill"><Info /> You can correct these in Study DNA</span></header><div>{observations.map((observation, index) => <article key={observation}><span>{String(index + 1).padStart(2, "0")}</span><p>{observation}</p><button onClick={() => navigate("dna")}>Does this sound right? <ArrowUpRight /></button></article>)}</div></section>
+  </div>;
+}

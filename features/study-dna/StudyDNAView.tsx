@@ -1,0 +1,20 @@
+"use client";
+
+import { useMindWeather } from "@/hooks/useMindWeather";
+import type { ViewId } from "@/lib/types";
+import { Check, HelpCircle, Info, Sparkles, X } from "lucide-react";
+import { useMemo, useState } from "react";
+
+export function StudyDNAView({}: { navigate?(view: ViewId): void }) {
+  const { state, respondToDNA } = useMindWeather();
+  const [selected, setSelected] = useState(state.dna[0]?.id);
+  const metric = state.dna.find((item) => item.id === selected);
+  const points = useMemo(() => state.dna.map((item, index) => { const angle = -Math.PI / 2 + (index / state.dna.length) * Math.PI * 2; const radius = item.value * 1.75; return `${250 + Math.cos(angle) * radius},${250 + Math.sin(angle) * radius}`; }).join(" "), [state.dna]);
+  return <div className="dna-page">
+    <header className="view-heading view-heading--row"><div><span className="view-heading__eyebrow">Study DNA</span><h1>Preferences, not destiny.</h1><p>A visual summary of self-reported preferences and app activity—not neuroscience, diagnosis, or identity.</p></div><span className="pill"><Info /> You can correct every assumption</span></header>
+    <div className="dna-layout"><section className="dna-visual panel"><header><span>YOUR CURRENT PATTERN</span><small>{state.sessions.length} sessions of evidence</small></header><svg viewBox="0 0 500 500" role="img" aria-label="Radial view of learning preferences"><g className="dna-grid">{[50, 100, 150, 200].map((radius) => <circle key={radius} cx="250" cy="250" r={radius} />)}{state.dna.map((_, index) => { const angle = -Math.PI/2 + index / state.dna.length * Math.PI * 2; return <line key={index} x1="250" y1="250" x2={250 + Math.cos(angle)*205} y2={250 + Math.sin(angle)*205} />; })}</g><polygon className="dna-shape" points={points} />{state.dna.map((item, index) => { const angle = -Math.PI/2 + index / state.dna.length * Math.PI * 2; const x = 250 + Math.cos(angle)*item.value*1.75; const y = 250 + Math.sin(angle)*item.value*1.75; const labelX = 250 + Math.cos(angle)*225; const labelY = 250 + Math.sin(angle)*225; return <g key={item.id} className={selected === item.id ? "dna-point selected" : "dna-point"} onClick={() => setSelected(item.id)} role="button" tabIndex={0}><circle cx={x} cy={y} r="7"/><text x={labelX} y={labelY} textAnchor={labelX < 225 ? "end" : labelX > 275 ? "start" : "middle"}>{item.label}</text></g>; })}<circle className="dna-core" cx="250" cy="250" r="22"/><text className="dna-core-text" x="250" y="254" textAnchor="middle">MW</text></svg></section>
+      <aside className="dna-insight panel">{metric && <><header><span><Sparkles /></span><div><small>WHAT WE’VE NOTICED</small><h2>{metric.label}</h2></div></header><strong className="dna-value">{metric.value}<small>/100</small></strong><p>“{metric.evidence}”</p><div className="dna-evidence"><span>BASED ON</span><div><i /><p>Recent session completion and your own ratings</p></div><div><i /><p>Your onboarding learning preferences</p></div></div><div className="dna-question"><span>Does this sound right?</span><button className={metric.confirmed === true ? "active yes" : "yes"} onClick={() => respondToDNA(metric.id, true)}><Check /> Sounds right</button><button className={metric.confirmed === false ? "active no" : "no"} onClick={() => respondToDNA(metric.id, false)}><X /> Not really</button></div></>}
+      </aside>
+    </div><section className="dna-metrics"><header><h2>All observed dimensions</h2><p>These values change slowly as your activity and corrections accumulate.</p></header><div>{state.dna.map((item) => <button key={item.id} onClick={() => setSelected(item.id)} className={selected === item.id ? "active" : ""}><span><strong>{item.label}</strong><small>{item.confirmed === true ? "Confirmed by you" : item.confirmed === false ? "Corrected by you" : "Open observation"}</small></span><div><i style={{ width: `${item.value}%` }} /></div><em>{item.value}</em></button>)}</div><footer><HelpCircle /><span><strong>This profile is descriptive, not prescriptive.</strong><small>It should help the system adapt—not box you in.</small></span></footer></section>
+  </div>;
+}

@@ -1,0 +1,23 @@
+name = "mindweather"
+main = "worker/index.ts"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mindweather"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "drizzle"
+
+# Add secrets with `wrangler secret put NAME`; never commit their values.
+# GOOGLE_CLIENT_ID
+# GOOGLE_CLIENT_SECRET
+# GOOGLE_REDIRECT_URI
+# GOOGLE_TOKEN_ENCRYPTION_KEY
+# GOOGLE_SESSION_SECRET
+# RESEND_API_KEY
+# REMINDER_EMAIL_FROM
+# CRON_SECRET
