@@ -1,6 +1,18 @@
 type RuntimeBindings = Record<string, unknown>;
 type MindWeatherGlobal = typeof globalThis & { __mindweatherBindings?: RuntimeBindings };
 
+interface RuntimeStatement {
+  bind(...values: unknown[]): RuntimeStatement;
+  run(): Promise<{ meta: { changes: number } }>;
+  all<T>(): Promise<{ results: T[] }>;
+  first<T>(): Promise<T | null>;
+}
+
+interface RuntimeDatabase {
+  prepare(query: string): RuntimeStatement;
+  batch(statements: RuntimeStatement[]): Promise<unknown>;
+}
+
 function bindings(): RuntimeBindings {
   return (globalThis as MindWeatherGlobal).__mindweatherBindings || {};
 }
@@ -16,9 +28,9 @@ export function serverValue(name: string): string | undefined {
   return fromProcess?.trim() || undefined;
 }
 
-export function optionalD1(): D1Database | null {
+export function optionalD1(): RuntimeDatabase | null {
   const database = bindings().DB;
-  return database && typeof database === "object" ? database as D1Database : null;
+  return database && typeof database === "object" ? database as RuntimeDatabase : null;
 }
 
 export const GOOGLE_SCOPES = [

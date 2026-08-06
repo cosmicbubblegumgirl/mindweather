@@ -295,7 +295,7 @@ function MonthView({ days, month, items, onDay, onItem }: { days: Date[]; month:
   })}</div></div>;
 }
 
-function AgendaView({ items, selectedDay, view, onLocalTask }: { items: DisplayItem[]; subjects: Subject[]; selectedDay: Date; view: Exclude<CalendarViewMode, "month">; onLocalTask(): void }) {
+function AgendaView({ items, selectedDay, view, onLocalTask }: { items: DisplayItem[]; selectedDay: Date; view: Exclude<CalendarViewMode, "month">; onLocalTask(): void }) {
   return <div className="agenda-wrap"><header className="agenda-header"><div><span>{view === "day" ? format(selectedDay, "EEEE") : "This week"}</span><h3>{view === "day" ? format(selectedDay, "MMMM d, yyyy") : `${format(startOfWeek(selectedDay, { weekStartsOn: 1 }), "MMM d")} – ${format(endOfWeek(selectedDay, { weekStartsOn: 1 }), "MMM d")}`}</h3></div><small>{items.length} scheduled item{items.length === 1 ? "" : "s"}</small></header><div className="agenda-view">{items.length ? items.map((item) => <article key={item.id}>
     <time>{format(new Date(item.startsAt), view === "day" ? "HH:mm" : "EEE\nHH:mm")}</time><i style={{ background: item.color }} />
     <div><small>{item.label}</small><h3>{item.title}</h3><p>{item.description || (item.kind === "meeting" ? "Meeting details from Google Calendar" : item.kind === "assignment" ? "Published deadline from Google Classroom" : "Scheduled calendar event")}</p></div>

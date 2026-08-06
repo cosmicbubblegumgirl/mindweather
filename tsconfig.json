@@ -30,5 +30,14 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "cloudscout-camp",
+    "output",
+    "tmp",
+    "tools",
+    "wobbly-compass-pages",
+    "db/index.ts",
+    "worker"
+  ]
 }
