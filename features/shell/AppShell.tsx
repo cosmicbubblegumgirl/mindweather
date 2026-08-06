@@ -13,6 +13,7 @@ import { ForecastView } from "@/features/forecast/ForecastView";
 import { FocusView } from "@/features/focus/FocusView";
 import { GardenView } from "@/features/garden/GardenView";
 import { JournalView } from "@/features/journal/JournalView";
+import { MobileInstallView } from "@/features/mobile/MobileInstallView";
 import { MoreView } from "@/features/more/MoreView";
 import { NotesView } from "@/features/notes/NotesView";
 import { PlanView } from "@/features/plan/PlanView";
@@ -26,7 +27,7 @@ import { WellbeingView } from "@/features/wellbeing/WellbeingView";
 import {
   BarChart3, Bell, BrainCircuit, CalendarDays, CheckCircle2, CloudSun, Command, Download, Flower2,
   Focus, Ghost, Grid2X2, Leaf, ListTodo, MoonStar, NotebookPen, PanelLeftClose, Search, Settings,
-  ClipboardList, HeartPulse, Sparkles, TimerReset, Users, WifiOff,
+  ClipboardList, HeartPulse, Smartphone, Sparkles, TimerReset, Users, WifiOff,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -46,6 +47,7 @@ const nav: { id: ViewId; label: string; icon: typeof CloudSun; primary?: boolean
   { id: "dna", label: "Study DNA", icon: BrainCircuit },
   { id: "wellbeing", label: "Wellbeing", icon: HeartPulse },
   { id: "research", label: "Research Survey", icon: ClipboardList },
+  { id: "mobile", label: "Mobile App", icon: Smartphone },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -64,6 +66,7 @@ const componentMap: Record<ViewId, React.ComponentType<{ navigate?(view: ViewId)
   dna: StudyDNAView,
   wellbeing: WellbeingView,
   research: ResearchSurveyView,
+  mobile: MobileInstallView,
   settings: SettingsView,
 };
 
@@ -190,6 +193,7 @@ function CommandPalette({ open, onClose, navigate, startSession, setFreeze }: { 
     { label: "Teach Bloop", detail: "Explain a concept", icon: BrainCircuit, run: () => navigate("focus") },
     { label: "Open Mistake Garden", detail: "Things that taught me something", icon: Flower2, run: () => navigate("garden") },
     { label: "Open Research Survey", detail: "Study habits and learning support", icon: ClipboardList, run: () => navigate("research") },
+    { label: "Install Mobile App", detail: "iPhone and Android QR codes", icon: Smartphone, run: () => navigate("mobile") },
     { label: "Download my data", detail: "Settings and privacy", icon: Download, run: () => navigate("settings") },
   ], [navigate, setFreeze, startSession]);
   const results = [...commands.map((item) => ({ ...item, kind: "Command" })), ...state.tasks.map((task) => ({ label: task.title, detail: state.subjects.find((subject) => subject.id === task.subjectId)?.name ?? "Task", icon: CheckCircle2, run: () => navigate("tasks"), kind: "Task" })), ...state.ghostNotes.map((note) => ({ label: note.message, detail: "Ghost note", icon: Ghost, run: () => navigate("notes"), kind: "Note" }))].filter((item) => `${item.label} ${item.detail}`.toLowerCase().includes(query.toLowerCase())).slice(0, 10);

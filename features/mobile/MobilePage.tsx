@@ -3,26 +3,9 @@
 import { Bloop } from "@/components/brand/Bloop";
 import { Brand } from "@/components/brand/Brand";
 import { WeatherBackdrop } from "@/components/brand/WeatherBackdrop";
+import { InstallQr } from "@/components/mobile/InstallQr";
 import { ArrowLeft, Check, Download, Smartphone, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { QRCodeSVG } from "qrcode.react";
-import { useEffect, useState } from "react";
-
-function InstallQr({ platform, label }: { platform: "ios" | "android"; label: string }) {
-  const [target, setTarget] = useState("");
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setTarget(`${window.location.origin}/mobile#${platform}`));
-    return () => window.cancelAnimationFrame(frame);
-  }, [platform]);
-
-  return (
-    <div className="install-qr">
-      {target ? <QRCodeSVG value={target} size={126} level="M" marginSize={2} bgColor="#ffffff" fgColor="#111027" role="img" aria-label={`${label} MindWeather install QR code`} /> : <span className="install-qr__loading">Preparing QR code</span>}
-      <span><strong>Scan from your phone</strong><small>The code uses this page&apos;s live address, so it stays correct after deployment.</small></span>
-    </div>
-  );
-}
 
 export function MobilePage() {
   return (

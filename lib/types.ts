@@ -21,6 +21,7 @@ export type ViewId =
   | "dna"
   | "wellbeing"
   | "research"
+  | "mobile"
   | "settings";
 
 export type TaskStatus = "inbox" | "planned" | "working" | "blocked" | "done";

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ViewId } from "@/lib/types";
-import { BarChart3, BrainCircuit, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, Flower2, Ghost, HeartPulse, NotebookPen, Settings, Users } from "lucide-react";
+import { BarChart3, BrainCircuit, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, Flower2, Ghost, HeartPulse, NotebookPen, Settings, Smartphone, Users } from "lucide-react";
 
 const links: { id: ViewId; label: string; detail: string; icon: typeof BarChart3 }[] = [
   { id: "tasks", label: "Tasks", detail: "All the things hanging around", icon: CheckCircle2 },
@@ -14,6 +14,7 @@ const links: { id: ViewId; label: string; detail: string; icon: typeof BarChart3
   { id: "dna", label: "Study DNA", detail: "Preferences, not destiny", icon: BrainCircuit },
   { id: "wellbeing", label: "Wellbeing", detail: "Gentle self-reflections and support", icon: HeartPulse },
   { id: "research", label: "Research Survey", detail: "Help shape MindWeather", icon: ClipboardList },
+  { id: "mobile", label: "Mobile App", detail: "iPhone and Android install codes", icon: Smartphone },
   { id: "settings", label: "Settings & Privacy", detail: "Make the station yours", icon: Settings },
 ];
 
