@@ -1,30 +1,31 @@
 import type { Metadata } from "next";
 import { Brand } from "@/components/brand/Brand";
 import { ArrowLeft, Database, Eye, LockKeyhole, ShieldCheck, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Google data & privacy",
-  description: "How MindWeather accesses, uses, protects and deletes Google Calendar and Classroom data.",
+  description: "How MindWeather accesses, uses, protects and deletes Google Calendar data.",
 };
 
 export default function GoogleDataPrivacyPage() {
   return <main className="privacy-page">
-    <nav className="privacy-page__nav"><Brand href="/" /><a href="/station#calendar"><ArrowLeft size={13} /> Back to Calendar</a></nav>
+    <nav className="privacy-page__nav"><Brand href="/" /><Link href="/station#calendar"><ArrowLeft size={13} /> Back to Calendar</Link></nav>
     <article className="privacy-page__content">
       <span>GOOGLE DATA & PRIVACY</span>
       <h1>A useful connection should still feel like yours.</h1>
-      <p className="privacy-page__lead">This notice explains how MindWeather handles information received from Google when you choose to connect Calendar and Classroom. The connection is optional and read-only.</p>
-      <small className="privacy-page__updated">Effective 5 August 2026</small>
+      <p className="privacy-page__lead">This notice explains how MindWeather handles information received from Google when you connect your calendar. The connection is optional and read-only.</p>
+      <small className="privacy-page__updated">Effective 10 August 2026</small>
 
       <div className="privacy-page__grid">
-        <section><Eye /><h2>What we access</h2><ul><li>Your Google account email address.</li><li>Primary Calendar event titles, descriptions, dates, times, locations, event links and Google Meet links.</li><li>Names of active Classroom courses and published coursework titles, descriptions, links and due dates.</li></ul><p>MindWeather does not request permission to read Gmail messages, send through Gmail, edit Calendar events or change Classroom work.</p></section>
-        <section><ShieldCheck /><h2>How it is used</h2><ul><li>To place meetings, events, Meet links and due work in your MindWeather calendar.</li><li>To send the email summary and reminders you enable.</li><li>To prevent the same reminder from being delivered more than once.</li></ul><p>Google user data is not used for advertising, credit decisions, profiling for sale, or training general-purpose machine-learning models.</p></section>
-        <section><LockKeyhole /><h2>How it is protected</h2><p>OAuth refresh tokens are encrypted before storage. They are held server-side and are never exposed to browser code in readable form. Connection requests use a time-limited state value and PKCE. Scheduled reminder endpoints require a separate server secret, and mutating browser requests are checked for same-origin use.</p></section>
-        <section><Database /><h2>Storage and sharing</h2><p>Upcoming event data is cached on your device for the calendar view. The hosted service stores the connected email, encrypted refresh token, selected reminder preferences and minimal delivery keys. Email content is sent to the configured delivery provider only to deliver your requested messages. We do not sell Google user data.</p></section>
-        <section><Trash2 /><h2>Retention, deletion and your choices</h2><p>You can turn off email, meeting or deadline reminders independently. Choosing <strong>Disconnect and delete synced data</strong> in Calendar revokes the Google token, removes the server connection and delivery records, and clears the device cache. Expired reminder delivery keys are automatically removed after 90 days.</p><p>Use of information received from Google APIs will adhere to the Google API Services User Data Policy, including the Limited Use requirements. If this notice or the connected scopes change, MindWeather must ask for any newly required consent and keep the deployed privacy notice and Google consent-screen links aligned.</p></section>
+        <section><Eye /><h2>What we access</h2><ul><li>Your Google account email address.</li><li>Primary Calendar event titles, descriptions, dates, times, locations, event links and Google Meet links.</li></ul><p>MindWeather does not request permission to read Gmail, send messages, or edit and delete Calendar events.</p></section>
+        <section><ShieldCheck /><h2>How it is used</h2><ul><li>To show meetings, events and Meet links beside your study plan.</li><li>To let you open the original event or join its meeting.</li></ul><p>Your Google information is not sold, shared for advertising, or used for unrelated profiling.</p></section>
+        <section><LockKeyhole /><h2>How it is protected</h2><p>The Google access token is kept in the current browser session and expires after a short period. MindWeather does not receive or store your Google password, and it does not ship a Google client secret in the website.</p></section>
+        <section><Database /><h2>Storage and sharing</h2><p>Upcoming event details and the connected email are cached on this device so the calendar remains useful between visits. Calendar requests go directly from your browser to Google. MindWeather does not run a separate calendar database or send your events to another service.</p></section>
+        <section><Trash2 /><h2>Deletion and your choices</h2><p>Choosing <strong>Disconnect</strong> revokes the current Google token and clears cached Google Calendar data from this device. You can also remove MindWeather from your Google account connections at any time.</p><p>Information received from Google APIs is handled under the Google API Services User Data Policy, including the Limited Use requirements.</p></section>
       </div>
 
-      <div className="privacy-page__actions"><a className="button button--light" href="/station#calendar">Return to Calendar</a><a className="button button--ghost" href="https://myaccount.google.com/connections" target="_blank" rel="noreferrer">Review Google account connections</a></div>
+      <div className="privacy-page__actions"><Link className="button button--light" href="/station#calendar">Return to Calendar</Link><a className="button button--ghost" href="https://myaccount.google.com/connections" target="_blank" rel="noreferrer">Review Google account connections</a></div>
     </article>
   </main>;
 }

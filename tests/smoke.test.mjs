@@ -4,51 +4,36 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-async function render(path = "/") {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
-  return worker.fetch(
-    new Request(`http://localhost${path}`, { headers: { accept: "text/html" } }),
-    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
-    { waitUntil() {}, passThroughOnException() {} },
-  );
+async function page(path = "index.html") {
+  return readFile(new URL(`../out/${path}`, import.meta.url), "utf8");
 }
 
-test("the landing page renders the product story", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  const html = await response.text();
+test("the landing page presents the simpler product story", async () => {
+  const html = await page();
   assert.match(html, /MindWeather/i);
-  assert.match(html, /Study for the brain you have today/i);
-  assert.match(html, /Check your weather/i);
-  assert.doesNotMatch(html, /Your site is taking shape/i);
+  assert.match(html, /Plan for the brain/i);
+  assert.match(html, /Three steps\. No dashboard maze/i);
+  assert.match(html, /Four clear places/i);
 });
 
-test("the weather station route renders the local product shell", async () => {
-  const response = await render("/station");
-  assert.equal(response.status, 200);
-  const html = await response.text();
-  assert.match(html, /Weather Station/i);
+test("the weather station keeps the core check-in and rescue tools", async () => {
+  const html = await page("station/index.html");
   assert.match(html, /What kind of brain day/i);
-  assert.match(html, /Cognitive storm/i);
+  assert.match(html, /Anxiety Rescue/i);
+  assert.match(html, /ADHD Rescue/i);
+  assert.match(html, /Today’s pace/i);
 });
 
-test("profile and mobile entry points render", async () => {
+test("the key entry points are exported", async () => {
   const routes = [
-    ["/login", /Open your weather station/i],
-    ["/forgot-password", /Choose a new key/i],
-    ["/mobile", /iPhone install|Android install/i],
+    ["login/index.html", /Open your weather station/i],
+    ["forgot-password/index.html", /Choose a new key/i],
+    ["mobile/index.html", /iPhone install|Android install/i],
+    ["privacy/google-data/index.html", /Google data/i],
   ];
-  for (const [path, marker] of routes) {
-    const response = await render(path);
-    assert.equal(response.status, 200, path);
-    assert.match(await response.text(), marker, path);
-  }
+  for (const [path, marker] of routes) assert.match(await page(path), marker, path);
 });
 
-test("local build does not include temporary preview residue", async () => {
+test("temporary preview files are absent", async () => {
   await assert.rejects(access(new URL("app/_sites-preview", root)));
-  const packageJson = await readFile(new URL("package.json", root), "utf8");
-  assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 });

@@ -1,7 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
 import "./calendar.css";
+import "./calm.css";
+
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export const metadata: Metadata = {
   title: {
@@ -10,13 +13,14 @@ export const metadata: Metadata = {
   },
   description: "A calm, adaptive study environment that reshapes the plan around the capacity you have today.",
   applicationName: "MindWeather",
-  themeColor: "#0b0919",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/app-icon.svg",
+    icon: `${basePath}/favicon.svg`,
+    shortcut: `${basePath}/favicon.svg`,
+    apple: `${basePath}/app-icon.svg`,
   },
 };
+
+export const viewport: Viewport = { themeColor: "#0b0919" };
 
 export default function RootLayout({
   children,

@@ -120,11 +120,11 @@ export function WellbeingView({ navigate = () => undefined }: { navigate?(view: 
     <div className="wellbeing-page">
       <header className="view-heading view-heading--row">
         <div>
-          <span className="view-heading__eyebrow">Wellbeing signals</span>
-          <h1>Check in without diagnosing yourself.</h1>
-          <p>These short reflections help shape a gentler study day. They are not medical tests, screening tools, or a diagnosis.</p>
+          <span className="view-heading__eyebrow">Rescue tools</span>
+          <h1>Find a little room to begin again.</h1>
+          <p>Choose Anxiety Rescue, ADHD Rescue, or talk to a human. These tools support the moment; they do not diagnose you.</p>
         </div>
-        <button className="anxiety-button" onClick={startQuickReset}><Wind /> I feel anxious right now</button>
+        <button className="anxiety-button" onClick={startQuickReset}><Wind /> Start Anxiety Rescue</button>
       </header>
 
       <section className="wellbeing-quick panel">
@@ -143,7 +143,7 @@ export function WellbeingView({ navigate = () => undefined }: { navigate?(view: 
       <section className="anxiety-relief panel" aria-labelledby="anxiety-relief-title">
         <header className="anxiety-relief__header">
           <div>
-            <span>ANXIETY NOOK</span>
+            <span>ANXIETY RESCUE</span>
             <h2 id="anxiety-relief-title">A quiet place to land.</h2>
             <p>Pick one small door. You do not need to understand the whole feeling before you can make it gentler.</p>
           </div>
@@ -167,8 +167,8 @@ export function WellbeingView({ navigate = () => undefined }: { navigate?(view: 
       </section>
 
       <div className="wellbeing-test-grid">
-        <article className="wellbeing-test panel"><span className="wellbeing-test__icon"><HeartPulse /></span><div><span>ANXIETY REFLECTION</span><h2>How loud is the worry today?</h2><p>Six gentle prompts about this moment, not who you are.</p><button className="button button--violet" onClick={() => begin("anxiety")}>Start anxiety check-in <ArrowRight /></button></div></article>
-        <article className="wellbeing-test panel"><span className="wellbeing-test__icon"><Activity /></span><div><span>ATTENTION REFLECTION</span><h2>What helps your focus return?</h2><p>Six prompts about starting, switching, and holding attention.</p><button className="button button--violet" onClick={() => begin("attention")}>Start ADHD-style reflection <ArrowRight /></button></div></article>
+        <article className="wellbeing-test panel"><span className="wellbeing-test__icon"><HeartPulse /></span><div><span>ANXIETY RESCUE</span><h2>How loud is the worry today?</h2><p>Six gentle prompts about this moment, not who you are.</p><button className="button button--violet" onClick={() => begin("anxiety")}>Check the anxiety signal <ArrowRight /></button></div></article>
+        <article className="wellbeing-test panel"><span className="wellbeing-test__icon"><Activity /></span><div><span>ADHD RESCUE</span><h2>What will help your focus return?</h2><p>Notice what is blocking the start, then return to one visible step.</p><button className="button button--violet" onClick={() => begin("attention")}>Start ADHD Rescue <ArrowRight /></button></div></article>
       </div>
 
       <section className="wellbeing-help panel"><div><span>SUPPORT IS PART OF THE PLAN</span><h2>You can ask for a human.</h2><p>MindWeather is a study tool. If anxiety or attention difficulties are affecting your safety, relationships, sleep, or daily life, a qualified professional can help you understand what is going on.</p></div><button className="button button--ghost" onClick={() => setHelpOpen(true)}><Phone /> View help lines</button></section>
