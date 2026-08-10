@@ -16,3 +16,44 @@
 @media(max-width:980px){.simple-hero{grid-template-columns:1fr;gap:55px;text-align:center}.simple-hero__copy>p{margin-inline:auto}.simple-hero .eyebrow,.simple-hero .hero-actions,.simple-trust{justify-content:center}.simple-hero-card{width:min(520px,100%);margin:auto}.simple-shell{padding-left:14px}.simple-sidebar{display:none}.simple-topbar{position:sticky;top:0}.simple-view{padding-bottom:105px}.simple-mobile-nav{position:fixed;z-index:30;left:50%;bottom:12px;display:grid;grid-template-columns:repeat(4,1fr);width:min(520px,calc(100% - 24px));padding:7px;border-radius:18px;transform:translateX(-50%)}.simple-mobile-nav button{min-height:51px;display:grid;place-items:center;align-content:center;gap:3px;border:0;border-radius:12px;background:transparent;color:#858092;font-size:8px}.simple-mobile-nav button svg{width:18px;height:18px}.simple-mobile-nav button.active{background:rgba(169,151,255,.13);color:white}.simple-mobile-nav button.active svg{color:var(--cyan)}}
 @media(max-width:760px){.simple-landing-nav{height:74px}.simple-hero{min-height:auto;padding:70px 0 90px}.simple-hero__copy h1{font-size:clamp(44px,13vw,64px)}.simple-hero__copy>p{font-size:14px}.simple-hero .hero-actions{align-items:stretch;flex-direction:column}.simple-trust{flex-direction:column;align-items:center;gap:8px}.simple-section{padding:85px 0}.simple-steps,.simple-features>div{grid-template-columns:1fr}.simple-steps article{min-height:180px}.simple-steps h3{margin-top:35px}.simple-cta{align-items:flex-start;flex-direction:column;margin-block:50px;padding:40px 26px}.simple-cta .button{width:100%}.simple-footer{flex-direction:column;justify-content:center;gap:10px;text-align:center}.simple-footer p{margin:0}.simple-topbar>div>small,.simple-profile strong{display:none}.simple-view{padding:22px 15px 100px}.rescue-shortcuts{grid-template-columns:1fr}.simple-weather-page .weather-selector{grid-template-columns:repeat(2,1fr)}.simple-weather-page .weather-choice{min-height:125px}.simple-adaptive-strip{grid-template-columns:1fr}.simple-google-status{grid-template-columns:43px 1fr}.simple-google-status>button{grid-column:2;justify-self:start}.simple-calendar__heading .button{width:100%}.simple-calendar-toolbar{grid-template-columns:36px 1fr 36px;padding:0 8px}.simple-calendar-toolbar strong{font-size:13px}.simple-week{gap:2px;padding:10px 6px}.simple-week button{min-height:62px}.simple-week small{font-size:7px}.simple-week strong{font-size:15px}.simple-week i{right:3px;top:3px}.simple-agenda{padding:0 12px 12px}.simple-agenda>article{grid-template-columns:44px 3px minmax(0,1fr);gap:9px;padding:12px 0}.simple-agenda>article>div:last-child{grid-column:3;justify-items:start}.simple-calendar-privacy{align-items:flex-start;text-align:center;line-height:1.5}.simple-weather-page .current-weather-seal{display:none}}
 @media(max-width:430px){.simple-hero-card{padding:18px}.simple-weather-summary{grid-template-columns:48px 1fr;text-align:left}.simple-weather-summary>span{width:48px;height:48px}.simple-section>header h2{font-size:36px}.simple-cta h2{font-size:35px}.simple-weather-page .weather-selector{grid-template-columns:1fr}.simple-week button i{display:none}.simple-week button{min-height:56px}.simple-week small{font-size:6px}.simple-week strong{font-size:14px}}
+
+/* Responsive refinement */
+.simple-sidebar nav{align-content:start;grid-auto-rows:min-content;flex:none}
+.simple-sidebar>.brand{gap:8px}
+.simple-sidebar>.brand img{width:36px;height:36px}
+.simple-sidebar>.brand .brand__type strong{font-size:11px;letter-spacing:.18em}
+.simple-weather-page .weather-selector{grid-template-columns:repeat(3,minmax(0,1fr))}
+.simple-weather-page .weather-choice{min-height:132px;padding:16px}
+.simple-weather-page .weather-choice strong{font-size:11px}
+.simple-weather-page .weather-choice small{font-size:9px}
+.plan-aside--simple{gap:10px}
+.plan-aside--simple .plan-weather-note,.plan-aside--simple .overwhelm-panel{min-height:92px}
+.simple-shell .segmented button:not(.active){color:#aaa5b8}
+.simple-shell .sequence-copy>span{font-size:8px}
+.simple-shell .sequence-copy h3{font-size:12px}
+.simple-shell .sequence-copy p,.simple-shell .sequence-time small{font-size:8px}
+
+@media(max-width:760px){
+  .simple-hero{gap:38px;padding:46px 0 68px}
+  .simple-trust{margin-top:18px}
+  .simple-section{padding:66px 0}
+  .simple-steps{margin-top:36px}
+  .simple-features{padding-top:44px}
+  .simple-features>div{margin-top:34px}
+  .simple-view{padding-inline:14px}
+  .simple-weather-page .weather-selector{display:flex;gap:10px;overflow-x:auto;padding:0 1px 10px;scroll-padding-inline:1px;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-inline:contain}
+  .simple-weather-page .weather-selector::-webkit-scrollbar{display:none}
+  .simple-weather-page .weather-choice{flex:0 0 min(72vw,245px);min-height:126px;scroll-snap-align:start}
+  .rescue-shortcuts{grid-template-columns:1fr 1fr}
+  .rescue-shortcuts .anxiety-button{min-height:74px}
+  .simple-weather-tools>.sliders-toggle{min-height:56px}
+  .plan-page .view-heading--row{gap:18px}
+  .plan-page .segmented{width:100%;overflow-x:auto}
+  .plan-page .segmented button{min-height:44px;white-space:nowrap}
+}
+
+@media(max-width:430px){
+  .simple-weather-page .weather-choice{flex-basis:78vw}
+  .rescue-shortcuts{grid-template-columns:1fr}
+  .simple-mobile-nav button{min-height:54px}
+}

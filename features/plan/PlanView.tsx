@@ -1,20 +1,17 @@
 "use client";
 
 import { Bloop } from "@/components/brand/Bloop";
-import { localPlanner } from "@/lib/planningEngine";
 import { useMindWeather } from "@/hooks/useMindWeather";
 import type { ViewId } from "@/lib/types";
 import { WEATHER } from "@/lib/weather";
-import { ArrowDown, ArrowUp, Check, ChevronRight, Circle, Clock3, Dices, FileText, GripVertical, ListTree, Play, RotateCw, Sparkles, Target } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { ArrowDown, ArrowUp, Check, ChevronRight, Circle, Clock3, FileText, GripVertical, ListTree, Play, Target } from "lucide-react";
+import { motion } from "framer-motion";
 import { useState } from "react";
 
 export function PlanView({ navigate = () => undefined }: { navigate?(view: ViewId): void }) {
   const { state, plan, planDone, completePlanStep, updateAssignmentSection, startSession } = useMindWeather();
   const [tab, setTab] = useState<"today" | "autopsy">("today");
   const [assignmentView, setAssignmentView] = useState<"brief" | "autopsy" | "timeline">("autopsy");
-  const [rouletteMinutes, setRouletteMinutes] = useState(15);
-  const [roulette, setRoulette] = useState("");
   const assignment = state.assignments[0];
   const completed = planDone.length;
 
@@ -28,8 +25,7 @@ export function PlanView({ navigate = () => undefined }: { navigate?(view: ViewI
         <div className="sequence-list">{plan.map((step, index) => { const done = planDone.includes(step.id); return <motion.article layout key={step.id} className={`${done ? "done" : ""} kind--${step.kind}`}><GripVertical className="sequence-grip" /><button className="sequence-check" onClick={() => !done && completePlanStep(step)} aria-label={done ? `${step.title} completed` : `Complete ${step.title}`}>{done ? <Check /> : <span>{index + 1}</span>}</button><div className="sequence-copy"><span>{step.subject} · {step.kind}</span><h3>{step.title}</h3><p>{step.reason}</p></div><div className="sequence-time"><strong>{step.minutes}</strong><small>min</small></div><button className="sequence-start" onClick={() => start(step.taskId, step.minutes)} disabled={done}><Play /> Start</button></motion.article>; })}</div>
         <footer><Bloop mood={completed === plan.length ? "celebrating" : "encouraging"} size="sm" /><span><strong>{completed === plan.length ? "You can call it a win." : "The plan is a suggestion, not a contract."}</strong><small>{completed === plan.length ? "Everything planned for this weather is complete." : "Reorder, shorten, or stop when you need to."}</small></span></footer>
       </section>
-      <aside className="plan-aside">
-        <section className="roulette-card panel"><header><Dices /><span><small>STUDY ROULETTE</small><strong>Let chance choose a sensible next move.</strong></span></header><label>Available time <strong>{rouletteMinutes} min</strong><input type="range" min="5" max="45" step="5" value={rouletteMinutes} onChange={(event) => setRouletteMinutes(Number(event.target.value))} /></label><AnimatePresence mode="wait"><motion.div key={roulette || "idle"} className={roulette ? "roulette-result active" : "roulette-result"} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}>{roulette || "A small action will land here."}</motion.div></AnimatePresence><button className="button button--violet" onClick={() => setRoulette(localPlanner.roulette(state, rouletteMinutes))}>{roulette ? <RotateCw /> : <Sparkles />}{roulette ? "Spin again" : "Spin the weather"}</button></section>
+      <aside className="plan-aside plan-aside--simple">
         <section className="plan-weather-note panel"><span className="weather-orb" /><div><small>WHY THIS PLAN?</small><strong>{WEATHER[state.currentWeather].label}</strong><p>{state.currentWeather === "storm" || state.currentWeather === "battery" ? "Short actions, visible pauses, and low switching cost." : "Deeper tasks first, with space to protect momentum."}</p></div></section>
         <button className="overwhelm-panel" onClick={() => navigate("weather")}><Target /><span><strong>I don’t know where to start</strong><small>Collapse everything to one action</small></span><ChevronRight /></button>
       </aside>
