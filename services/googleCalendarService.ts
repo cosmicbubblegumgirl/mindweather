@@ -137,13 +137,25 @@ export const googleCalendarService = {
 
   async status(): Promise<CalendarConnectionStatus> {
     const cache = this.loadCache();
+    let googleSignInReady = Boolean(GOOGLE_CLIENT_ID);
+    if (GOOGLE_CLIENT_ID) {
+      try {
+        await loadGoogleIdentity();
+      } catch {
+        googleSignInReady = false;
+      }
+    }
     return {
-      configured: Boolean(GOOGLE_CLIENT_ID),
+      configured: googleSignInReady,
       connected: Boolean(storedToken()),
       backgroundRemindersAvailable: false,
       email: cache.email,
       lastSyncAt: cache.syncedAt,
-      reason: GOOGLE_CLIENT_ID ? undefined : "Google Calendar needs a public browser client ID.",
+      reason: !GOOGLE_CLIENT_ID
+        ? "Google Calendar needs a public browser client ID."
+        : googleSignInReady
+          ? undefined
+          : "Google sign-in could not be loaded.",
     };
   },
 
