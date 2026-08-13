@@ -23,6 +23,8 @@ export function LandingPage() {
         <nav className={menuOpen ? "landing-nav__links is-open" : "landing-nav__links"} aria-label="Primary navigation">
           <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
           <a href="#what-you-get" onClick={() => setMenuOpen(false)}>What you get</a>
+          <Link href="/login" onClick={() => setMenuOpen(false)}>Log in</Link>
+          <Link href="/signup" className="button button--small button--ghost" onClick={() => setMenuOpen(false)}>Create account</Link>
           <Link href="/station" className="button button--small button--light">Open MindWeather <ArrowRight size={15} /></Link>
         </nav>
         <button className="icon-button landing-nav__menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"}>{menuOpen ? <X /> : <Menu />}</button>
@@ -70,7 +72,7 @@ export function LandingPage() {
         <Link href="/station" className="button button--light">Open MindWeather <ArrowRight /></Link>
       </section>
 
-      <footer className="simple-footer shell-width"><Brand /><p>A private study companion for changing brain days.</p><Link href="/privacy/google-data">Google data & privacy</Link></footer>
+      <footer className="simple-footer shell-width"><Brand /><p>A private study companion for changing brain days.</p><Link href="/terms">Terms of service</Link><Link href="/privacy/google-data">Google data & privacy</Link></footer>
     </main>
   );
 }
