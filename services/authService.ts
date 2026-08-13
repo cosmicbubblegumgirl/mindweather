@@ -1,53 +1,39 @@
-const ACCOUNT_KEY = "mindweather.local.accounts.v1";
-const SESSION_KEY = "mindweather.local.session.v1";
-
-interface LocalAccount {
-  name: string;
-  email: string;
-  passwordHash: string;
-  verified: boolean;
-}
-
-async function hash(value: string) {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest)).map((item) => item.toString(16).padStart(2, "0")).join("");
-}
-
-function accounts(): LocalAccount[] {
-  try {
-    return JSON.parse(localStorage.getItem(ACCOUNT_KEY) ?? "[]") as LocalAccount[];
-  } catch {
-    return [];
-  }
-}
+import { hostedAccountAvailable, supabase } from "@/lib/supabase";
 
 export const authService = {
+  available: hostedAccountAvailable,
   async signUp(name: string, email: string, password: string) {
-    const existing = accounts();
-    if (existing.some((account) => account.email === email.toLowerCase())) throw new Error("A local profile already uses that email.");
-    const account = { name, email: email.toLowerCase(), passwordHash: await hash(password), verified: true };
-    localStorage.setItem(ACCOUNT_KEY, JSON.stringify([...existing, account]));
-    localStorage.setItem(SESSION_KEY, account.email);
-    return account;
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase().auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: { data: { name: name.trim() }, emailRedirectTo: `${window.location.origin}/login/` },
+    });
+    if (error) throw error;
+    return { name: name.trim(), email: normalizedEmail, verified: Boolean(data.session) };
   },
   async login(email: string, password: string) {
-    const passwordHash = await hash(password);
-    const account = accounts().find((item) => item.email === email.toLowerCase() && item.passwordHash === passwordHash);
-    if (!account) throw new Error("That email and password do not match this device.");
-    localStorage.setItem(SESSION_KEY, account.email);
-    return account;
+    const { data, error } = await supabase().auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    if (error) throw error;
+    return data.user;
   },
-  logout() {
-    localStorage.removeItem(SESSION_KEY);
+  async logout() {
+    const { error } = await supabase().auth.signOut();
+    if (error) throw error;
   },
-  session() {
-    return localStorage.getItem(SESSION_KEY);
+  async session() {
+    if (!hostedAccountAvailable()) return null;
+    const { data } = await supabase().auth.getSession();
+    return data.session;
   },
-  async resetPassword(email: string, password: string) {
-    const all = accounts();
-    if (!all.some((item) => item.email === email.toLowerCase())) throw new Error("No local profile uses that email.");
-    const passwordHash = await hash(password);
-    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(all.map((item) => (item.email === email.toLowerCase() ? { ...item, passwordHash } : item))));
+  async resetPassword(email: string) {
+    const { error } = await supabase().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: `${window.location.origin}/forgot-password/auth/`,
+    });
+    if (error) throw error;
+  },
+  async updatePassword(password: string) {
+    const { error } = await supabase().auth.updateUser({ password });
+    if (error) throw error;
   },
 };

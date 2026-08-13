@@ -4,6 +4,10 @@ import type { AppState } from "@/lib/types";
 export const STORAGE_KEY = "mindweather.local.v1";
 export const STORAGE_EVENT = "mindweather:storage";
 
+function storageKey(userId?: string) {
+  return userId ? `${STORAGE_KEY}.${userId}` : STORAGE_KEY;
+}
+
 function cloneDemo(): AppState {
   return JSON.parse(JSON.stringify(demoState)) as AppState;
 }
@@ -35,10 +39,10 @@ function normalize(state: Partial<AppState>): AppState {
 }
 
 export const storageService = {
-  load(): AppState {
+  load(userId?: string): AppState {
     if (typeof window === "undefined") return cloneDemo();
     try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
+      const stored = window.localStorage.getItem(storageKey(userId));
       if (!stored) return cloneDemo();
       const parsed = JSON.parse(stored) as Partial<AppState>;
       return parsed.version === demoState.version ? normalize(parsed) : cloneDemo();
@@ -47,15 +51,15 @@ export const storageService = {
     }
   },
 
-  save(state: AppState) {
+  save(state: AppState, userId?: string) {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    window.localStorage.setItem(storageKey(userId), JSON.stringify(state));
     window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: state }));
   },
 
-  reset(): AppState {
+  reset(userId?: string): AppState {
     const state = cloneDemo();
-    this.save(state);
+    this.save(state, userId);
     return state;
   },
 
@@ -69,8 +73,8 @@ export const storageService = {
     URL.revokeObjectURL(url);
   },
 
-  clear() {
+  clear(userId?: string) {
     if (typeof window === "undefined") return;
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(storageKey(userId));
   },
 };
