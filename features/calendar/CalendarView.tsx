@@ -116,7 +116,7 @@ export function CalendarView({ navigate = () => undefined }: { navigate?(view: V
         <span className="simple-google-status__mark"><GoogleMark />{connection.connected && <i><Check /></i>}</span>
         <div>
           <strong>{connection.connected ? `Synced with ${connection.email}` : "Bring your Google schedule into view"}</strong>
-          <p>{connection.connected ? "Read-only sync is on. Your Google events are never changed." : connection.configured ? "See events beside your study plan. MindWeather only asks to read your calendar." : "Google sync is ready once the site owner adds the public Google client ID."}</p>
+          <p>{connection.connected ? "Read-only sync is on and refreshes automatically while this browser session is open. Your Google events are never changed." : connection.configured ? "Choose your own Google account once, then MindWeather refreshes it automatically for this browser session. It only asks to read your calendar." : "Google sync is ready once the site owner adds the public Google client ID."}</p>
         </div>
         {connection.connected && <button onClick={async () => { await googleCalendarService.disconnect(); setConnection({ ...emptyStatus, configured: true }); setExternalItems([]); }}>Disconnect</button>}
       </section>

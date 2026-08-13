@@ -7,6 +7,7 @@ import { useMindWeather } from "@/hooks/useMindWeather";
 import type { Preferences } from "@/lib/types";
 import { ArrowLeft, ArrowRight, Check, Headphones, Lightbulb, MessageCircle, MousePointer2, Play, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 const obstacleOptions = ["Getting started", "Distractions", "Overwhelm", "Time management", "Remembering information", "Planning", "Motivation", "Understanding difficult concepts"];
@@ -15,6 +16,7 @@ const focusTimes = ["Early morning", "Morning", "Afternoon", "Evening", "It vari
 const supportOptions: { label: string; value: Preferences["overwhelmAction"] }[] = [{ label: "Simplify everything", value: "simplify" }, { label: "Show one task", value: "one-task" }, { label: "Suggest a break", value: "break" }, { label: "Help me prioritise", value: "prioritise" }, { label: "Ask me what I need", value: "ask" }];
 
 export function OnboardingPage() {
+  const router = useRouter();
   const { state, updateProfile, updatePreferences } = useMindWeather();
   const [step, setStep] = useState(0);
   const [field, setField] = useState(state.profile.field || "");
@@ -23,7 +25,7 @@ export function OnboardingPage() {
   const [obstacles, setObstacles] = useState<string[]>(state.profile.obstacles ?? []);
   const [learning, setLearning] = useState<string[]>(state.profile.learningMethods ?? []);
   const [support, setSupport] = useState<Preferences["overwhelmAction"]>(state.preferences.overwhelmAction);
-  const finish = () => { updateProfile({ field, focusWindow, obstacles, learningMethods: learning, onboarded: true }); updatePreferences({ overwhelmAction: support }); window.location.href = "/station"; };
+  const finish = () => { updateProfile({ field, focusWindow, obstacles, learningMethods: learning, onboarded: true }); updatePreferences({ overwhelmAction: support }); router.push("/station"); };
   const canContinue = step === 0 ? field.trim().length > 1 : step === 1 ? subjects.trim().length > 1 : step === 3 ? obstacles.length > 0 : step === 4 ? learning.length > 0 : true;
   return <main className="onboarding-page"><WeatherBackdrop weather="clear" /><header><Brand /><span>STUDY DNA · {step + 1} OF 7</span><button className="button button--ghost button--small" onClick={() => finish()}>Skip for now</button></header><div className="onboarding-progress"><span style={{ width: `${((step + 1) / 7) * 100}%` }} /></div><section className="onboarding-stage"><aside><Bloop mood={step === 6 ? "celebrating" : step === 3 ? "thinking" : "encouraging"} size="lg" /><p>{["Let’s start with the big picture.", "A rough list is perfect.", "No need to be exact.", "Pick as many as feel familiar.", "You can be more than one kind of learner.", "This helps on difficult days.", "That’s enough to begin."][step]}</p></aside><AnimatePresence mode="wait"><motion.div key={step} className="onboarding-card panel" initial={{ opacity: 0, x: 22 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       {step === 0 && <><span>HELLO, {state.profile.name.toUpperCase()}</span><h1>What are you studying?</h1><p>Use the language you would use with a friend.</p><input className="onboarding-main-input" autoFocus value={field} onChange={(event) => setField(event.target.value)} placeholder="Interaction design and frontend…" /></>}

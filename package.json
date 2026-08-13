@@ -1,6 +1,7 @@
 {
   "name": "mindweather",
   "version": "0.1.0",
+  "author": "Simoné Govender",
   "private": true,
   "engines": {
     "node": ">=22.13.0"

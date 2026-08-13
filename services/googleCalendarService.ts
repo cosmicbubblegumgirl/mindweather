@@ -8,18 +8,12 @@ import {
   type SyncedCalendarItem,
   defaultCalendarPreferences,
 } from "@/lib/calendar";
+import { googleIdentityConfigured, loadGoogleIdentity } from "@/services/googleIdentityService";
 
 interface CalendarCache {
   items: SyncedCalendarItem[];
   syncedAt?: string;
   email?: string;
-}
-
-interface GoogleTokenResponse {
-  access_token?: string;
-  expires_in?: number;
-  error?: string;
-  error_description?: string;
 }
 
 interface GoogleCalendarEvent {
@@ -34,28 +28,6 @@ interface GoogleCalendarEvent {
   conferenceData?: { entryPoints?: Array<{ entryPointType?: string; uri?: string }> };
 }
 
-interface GoogleTokenClient {
-  requestAccessToken(options?: { prompt?: string }): void;
-}
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        oauth2: {
-          initTokenClient(options: {
-            client_id: string;
-            scope: string;
-            callback(response: GoogleTokenResponse): void;
-            error_callback?(error: { type?: string }): void;
-          }): GoogleTokenClient;
-          revoke(token: string, callback?: () => void): void;
-        };
-      };
-    };
-  }
-}
-
 const TOKEN_KEY = "mindweather.google-access.v1";
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 const GOOGLE_SCOPE = "openid email https://www.googleapis.com/auth/calendar.readonly";
@@ -68,26 +40,6 @@ function storedToken() {
   } catch {
     return null;
   }
-}
-
-function loadGoogleIdentity() {
-  if (window.google?.accounts.oauth2) return Promise.resolve();
-  return new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('script[data-mindweather-google]');
-    if (existing) {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("Google sign-in could not be loaded.")), { once: true });
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.dataset.mindweatherGoogle = "true";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Google sign-in could not be loaded."));
-    document.head.appendChild(script);
-  });
 }
 
 async function googleJson<T>(url: string, token: string): Promise<T> {
@@ -137,8 +89,8 @@ export const googleCalendarService = {
 
   async status(): Promise<CalendarConnectionStatus> {
     const cache = this.loadCache();
-    let googleSignInReady = Boolean(GOOGLE_CLIENT_ID);
-    if (GOOGLE_CLIENT_ID) {
+    let googleSignInReady = googleIdentityConfigured();
+    if (googleSignInReady) {
       try {
         await loadGoogleIdentity();
       } catch {
