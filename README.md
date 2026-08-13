@@ -14,7 +14,7 @@ The wider learning features and their saved data remain available to the guided 
 
 ## Privacy
 
-Study data stays in the browser by default. Google Calendar access uses a short-lived browser session, requests read-only calendar permission, and does not edit or delete events. Disconnecting clears the session and cached Google items from the device.
+Supabase Auth verifies accounts, Postgres stores a protected workspace copy, and Row Level Security restricts every record to its owner. A per-user browser cache supports responsive and temporary offline use. Google Calendar access uses a separate short-lived browser session, requests read-only calendar permission, and does not edit or delete events.
 
 ## Run locally
 
@@ -33,9 +33,11 @@ Create a Google OAuth web client, add the local and published site URLs as autho
 
 ```bash
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-public-client-id
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-public-publishable-key
 ```
 
-Enable the Google Calendar API for the same project. The client ID is public browser configuration; no client secret is shipped with the site.
+Enable the Google Calendar API for the same project. Configure the Google provider in Supabase with the matching OAuth client and add Supabase's callback URL to that client. The website receives public browser configuration only; no client secret is shipped with the static site.
 
 ## Checks
 

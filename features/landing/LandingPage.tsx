@@ -25,7 +25,6 @@ export function LandingPage() {
           <a href="#what-you-get" onClick={() => setMenuOpen(false)}>What you get</a>
           <Link href="/login" onClick={() => setMenuOpen(false)}>Log in</Link>
           <Link href="/signup" className="button button--small button--ghost" onClick={() => setMenuOpen(false)}>Create account</Link>
-          <Link href="/station" className="button button--small button--light">Open MindWeather <ArrowRight size={15} /></Link>
         </nav>
         <button className="icon-button landing-nav__menu" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"}>{menuOpen ? <X /> : <Menu />}</button>
       </header>
@@ -36,10 +35,10 @@ export function LandingPage() {
           <h1>Plan for the brain<br />you have <em>today.</em></h1>
           <p>Check how you’re feeling, get a realistic plan, and focus on one thing at a time. Your calendar and study work stay together without the usual noise.</p>
           <div className="hero-actions">
-            <Link href="/station" className="button button--peach">Check today’s weather <ArrowRight size={18} /></Link>
+            <Link href="/signup" className="button button--peach">Create your account <ArrowRight size={18} /></Link>
             <a href="#how-it-works" className="simple-text-link">See how it works</a>
           </div>
-          <div className="simple-trust"><span><ShieldCheck size={15} /> Private by default</span><span><Check size={15} /> No account needed</span></div>
+          <div className="simple-trust"><span><ShieldCheck size={15} /> Private by default</span><span><Check size={15} /> Your account, your device</span></div>
         </div>
 
         <div className="simple-hero-card" aria-label="MindWeather preview">
@@ -69,7 +68,7 @@ export function LandingPage() {
 
       <section className="simple-cta shell-width">
         <div><span className="eyebrow">Start where you are</span><h2>Today doesn’t need a perfect plan.</h2><p>It just needs one honest check-in and one doable next step.</p></div>
-        <Link href="/station" className="button button--light">Open MindWeather <ArrowRight /></Link>
+        <Link href="/signup" className="button button--light">Create account <ArrowRight /></Link>
       </section>
 
       <footer className="simple-footer shell-width"><Brand /><p>A private study companion for changing brain days.</p><Link href="/terms">Terms of service</Link><Link href="/privacy/google-data">Google data & privacy</Link></footer>

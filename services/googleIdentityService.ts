@@ -1,21 +1,10 @@
-export interface GoogleIdentityProfile {
-  id: string;
-  name: string;
-  email: string;
+export interface GoogleIdentityCredential {
+  credential: string;
+  nonce: string;
 }
 
 interface GoogleCredentialResponse {
   credential?: string;
-}
-
-interface GoogleIdClaims {
-  aud?: string;
-  email?: string;
-  email_verified?: boolean;
-  exp?: number;
-  iss?: string;
-  name?: string;
-  sub?: string;
 }
 
 interface GoogleTokenResponse {
@@ -39,6 +28,7 @@ declare global {
             auto_select?: boolean;
             callback(response: GoogleCredentialResponse): void;
             client_id: string;
+            nonce?: string;
             use_fedcm_for_prompt?: boolean;
           }): void;
           renderButton(element: HTMLElement, options: {
@@ -67,8 +57,9 @@ declare global {
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
 let identityInitialized = false;
+let identityNonce = "";
 let credentialCallbacks: {
-  onSuccess(profile: GoogleIdentityProfile): void;
+  onSuccess(identity: GoogleIdentityCredential): void;
   onError(error: Error): void;
 } | undefined;
 
@@ -96,34 +87,17 @@ export function loadGoogleIdentity() {
   });
 }
 
-function decodeCredential(credential: string): GoogleIdClaims {
-  const encoded = credential.split(".")[1];
-  if (!encoded) throw new Error("Google did not return a valid identity credential.");
-  const normalized = encoded.replace(/-/g, "+").replace(/_/g, "/");
-  const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-  const bytes = Uint8Array.from(window.atob(padded), (character) => character.charCodeAt(0));
-  return JSON.parse(new TextDecoder().decode(bytes)) as GoogleIdClaims;
-}
-
-function identityProfile(credential: string): GoogleIdentityProfile {
-  const claims = decodeCredential(credential);
-  const validIssuer = claims.iss === "https://accounts.google.com" || claims.iss === "accounts.google.com";
-  if (claims.aud !== GOOGLE_CLIENT_ID || !validIssuer || !claims.exp || claims.exp * 1000 <= Date.now()) {
-    throw new Error("Google returned an identity credential for a different app or an expired session.");
-  }
-  if (!claims.sub || !claims.email || claims.email_verified !== true) {
-    throw new Error("Google could not confirm a verified email address for this account.");
-  }
-  return {
-    id: claims.sub,
-    name: claims.name?.trim() || claims.email.split("@")[0],
-    email: claims.email.toLowerCase(),
-  };
+async function createIdentityNonce() {
+  const random = crypto.getRandomValues(new Uint8Array(32));
+  const raw = window.btoa(String.fromCharCode(...random)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  const hashed = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return { raw, hashed };
 }
 
 export async function renderGoogleSignIn(
   element: HTMLElement,
-  onSuccess: (profile: GoogleIdentityProfile) => void,
+  onSuccess: (identity: GoogleIdentityCredential) => void,
   onError: (error: Error) => void,
 ) {
   if (!GOOGLE_CLIENT_ID) throw new Error("Google sign-in is not configured for this site yet.");
@@ -132,15 +106,19 @@ export async function renderGoogleSignIn(
   if (!identity) throw new Error("Google sign-in could not be loaded.");
   credentialCallbacks = { onSuccess, onError };
   if (!identityInitialized) {
+    const nonce = await createIdentityNonce();
+    identityNonce = nonce.raw;
     identity.initialize({
       client_id: GOOGLE_CLIENT_ID,
       auto_select: false,
+      nonce: nonce.hashed,
       callback: (response) => {
         const callbacks = credentialCallbacks;
         if (!callbacks) return;
         try {
           if (!response.credential) throw new Error("Google sign-in was cancelled.");
-          callbacks.onSuccess(identityProfile(response.credential));
+          if (!identityNonce) throw new Error("Google sign-in could not establish a secure nonce.");
+          callbacks.onSuccess({ credential: response.credential, nonce: identityNonce });
         } catch (error) {
           callbacks.onError(error instanceof Error ? error : new Error("Google sign-in could not be completed."));
         }
