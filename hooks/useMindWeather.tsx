@@ -9,6 +9,8 @@ import { mistakeService } from "@/services/mistakeService";
 import { notificationService } from "@/services/notificationService";
 import { sessionService } from "@/services/sessionService";
 import { storageService } from "@/services/storageService";
+import { cloudStateService } from "@/services/cloudStateService";
+import { hostedAccountAvailable, supabase } from "@/lib/supabase";
 import { studyDNAService } from "@/services/studyDNAService";
 import { taskService } from "@/services/taskService";
 import { weatherService } from "@/services/weatherService";
@@ -57,19 +59,53 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
   const [hydrated, setHydrated] = useState(false);
   const [planDone, setPlanDone] = useState<string[]>([]);
   const [celebration, setCelebration] = useState(0);
+  const [cloudUserId, setCloudUserId] = useState<string>();
 
   useEffect(() => {
-    const localState = storageService.load();
-    const frame = window.requestAnimationFrame(() => {
-      setState(localState);
-      setHydrated(true);
-    });
-    return () => window.cancelAnimationFrame(frame);
+    let active = true;
+    const hydrate = async () => {
+      if (!hostedAccountAvailable()) {
+        const localState = storageService.load();
+        if (active) { setState(localState); setHydrated(true); }
+        return;
+      }
+      const { data } = await supabase().auth.getSession();
+      const user = data.session?.user;
+      if (!user) {
+        const localState = storageService.load();
+        if (active) { setState(localState); setHydrated(true); }
+        return;
+      }
+      const localState = storageService.load(user.id);
+      try {
+        const remoteState = await cloudStateService.load(user.id);
+        const nextState = remoteState ?? {
+          ...localState,
+          profile: {
+            ...localState.profile,
+            id: user.id,
+            email: user.email || localState.profile.email,
+            name: String(user.user_metadata?.name || localState.profile.name),
+          },
+        };
+        if (active) { setCloudUserId(user.id); setState(nextState); setHydrated(true); }
+      } catch {
+        if (active) { setCloudUserId(user.id); setState(localState); setHydrated(true); }
+      }
+    };
+    void hydrate();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    if (hydrated) storageService.save(state);
-  }, [hydrated, state]);
+    if (!hydrated) return;
+    storageService.save(state, cloudUserId);
+    if (!cloudUserId) return;
+    const save = () => { void cloudStateService.save(cloudUserId, state).catch(() => undefined); };
+    const timer = window.setTimeout(save, 500);
+    window.addEventListener("online", save);
+    return () => { window.clearTimeout(timer); window.removeEventListener("online", save); };
+  }, [cloudUserId, hydrated, state]);
 
   const plan = useMemo(() => localPlanner.createPlan(state, state.currentWeather), [state]);
 
@@ -149,9 +185,9 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
     markNotification(id) { change((current) => notificationService.markRead(current, id)); },
     markAllNotifications() { change((current) => notificationService.markAllRead(current)); },
     downloadData() { storageService.download(state); },
-    resetDemo() { setState(storageService.reset()); setPlanDone([]); },
-    deleteData() { storageService.clear(); setState({ ...storageService.reset(), tasks: [], sessions: [], weatherCheckins: [], concepts: [], mistakes: [], ghostNotes: [], journal: [], notifications: [], wellbeingCheckins: [] }); },
-  }), [state, hydrated, plan, planDone, celebration, change]);
+    resetDemo() { setState(storageService.reset(cloudUserId)); setPlanDone([]); },
+    deleteData() { storageService.clear(cloudUserId); if (cloudUserId) void cloudStateService.clear(cloudUserId); setState({ ...storageService.reset(cloudUserId), tasks: [], sessions: [], weatherCheckins: [], concepts: [], mistakes: [], ghostNotes: [], journal: [], notifications: [], wellbeingCheckins: [] }); },
+  }), [state, hydrated, plan, planDone, celebration, change, cloudUserId]);
 
   return <MindWeatherContext.Provider value={value}>{children}</MindWeatherContext.Provider>;
 }

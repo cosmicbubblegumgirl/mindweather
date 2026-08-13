@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
 import { AuthPage } from "@/features/auth/AuthPage";
 
-export const metadata: Metadata = { title: "Local profile", description: "Create or open a private MindWeather profile on this device." };
-export default function Page() { return <AuthPage />; }
+export const metadata: Metadata = { title: "Choose a new password", description: "Secure your MindWeather account with a new password." };
+export default function Page() { return <AuthPage initialMode="update" />; }
