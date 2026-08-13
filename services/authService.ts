@@ -1,8 +1,7 @@
-import type { GoogleIdentityProfile } from "@/services/googleIdentityService";
-
-const ACCOUNT_KEY = "mindweather.local.accounts.v1";
-const SESSION_KEY = "mindweather.local.session.v1";
-const PASSWORD_ITERATIONS = 210_000;
+import type { Profile } from "@/lib/types";
+import type { GoogleIdentityCredential } from "@/services/googleIdentityService";
+import { getSupabaseClient, supabaseConfigured } from "@/services/supabaseClient";
+import type { AuthChangeEvent, User } from "@supabase/supabase-js";
 
 export type AuthProvider = "password" | "google";
 
@@ -12,197 +11,141 @@ export interface AuthAccount {
   email: string;
   providers: AuthProvider[];
   verified: boolean;
+  onboarded: boolean;
 }
 
-interface StoredAccount {
-  id?: string;
+export interface SignUpResult {
+  account: AuthAccount | null;
+  needsEmailConfirmation: boolean;
+}
+
+interface ProfileRow {
   name: string;
   email: string;
-  passwordHash?: string;
-  passwordSalt?: string;
-  passwordIterations?: number;
-  googleSubject?: string;
-  providers?: AuthProvider[];
-  verified: boolean;
+  onboarded: boolean;
 }
 
-function hex(bytes: Uint8Array) {
-  return Array.from(bytes, (item) => item.toString(16).padStart(2, "0")).join("");
+function displayName(user: User, profile?: ProfileRow | null) {
+  const metadataName = user.user_metadata?.name || user.user_metadata?.full_name;
+  return profile?.name?.trim() || String(metadataName || "").trim() || user.email?.split("@")[0] || "MindWeather learner";
 }
 
-async function legacyHash(value: string) {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
-  return hex(new Uint8Array(digest));
-}
-
-async function passwordHash(value: string, salt: Uint8Array, iterations = PASSWORD_ITERATIONS) {
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(value), "PBKDF2", false, ["deriveBits"]);
-  const digest = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt: salt.buffer as ArrayBuffer, iterations },
-    key,
-    256,
-  );
-  return hex(new Uint8Array(digest));
-}
-
-function saltFromHex(value: string) {
-  return new Uint8Array(value.match(/.{1,2}/g)?.map((byte) => Number.parseInt(byte, 16)) ?? []);
-}
-
-async function makePasswordRecord(password: string) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  return {
-    passwordHash: await passwordHash(password, salt),
-    passwordSalt: hex(salt),
-    passwordIterations: PASSWORD_ITERATIONS,
-  };
-}
-
-function providersFor(account: StoredAccount): AuthProvider[] {
-  if (account.providers?.length) return [...new Set(account.providers)];
-  const providers: AuthProvider[] = [];
-  if (account.passwordHash) providers.push("password");
-  if (account.googleSubject) providers.push("google");
-  return providers;
-}
-
-function publicAccount(account: StoredAccount): AuthAccount {
-  return {
-    id: account.id || account.googleSubject || account.email,
-    name: account.name,
-    email: account.email,
-    providers: providersFor(account),
-    verified: account.verified,
-  };
-}
-
-function accounts(): StoredAccount[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(window.localStorage.getItem(ACCOUNT_KEY) ?? "[]") as StoredAccount[];
-  } catch {
+function providersFor(user: User): AuthProvider[] {
+  const raw = Array.isArray(user.app_metadata?.providers)
+    ? user.app_metadata.providers
+    : user.identities?.map((identity) => identity.provider) ?? [];
+  const providers = raw.flatMap<AuthProvider>((provider) => {
+    if (provider === "google") return ["google"];
+    if (provider === "email") return ["password"];
     return [];
-  }
+  });
+  return [...new Set(providers.length ? providers : ["password"])] as AuthProvider[];
 }
 
-function saveAccounts(value: StoredAccount[]) {
-  window.localStorage.setItem(ACCOUNT_KEY, JSON.stringify(value));
+function accountFromUser(user: User, profile?: ProfileRow | null): AuthAccount {
+  return {
+    id: user.id,
+    name: displayName(user, profile),
+    email: (profile?.email || user.email || "").toLowerCase(),
+    providers: providersFor(user),
+    verified: Boolean(user.email_confirmed_at),
+    onboarded: profile?.onboarded ?? false,
+  };
 }
 
-function openSession(account: StoredAccount) {
-  window.localStorage.setItem(SESSION_KEY, account.email);
-  return publicAccount(account);
+async function accountWithProfile(user: User) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("name,email,onboarded")
+    .eq("id", user.id)
+    .maybeSingle<ProfileRow>();
+  if (error) throw error;
+  return accountFromUser(user, data);
 }
 
 export const authService = {
-  async signUp(name: string, email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
-    const all = accounts();
-    const index = all.findIndex((account) => account.email === normalizedEmail);
-    const passwordRecord = await makePasswordRecord(password);
+  configured: supabaseConfigured,
 
-    if (index >= 0) {
-      const existing = all[index];
-      if (providersFor(existing).includes("password")) throw new Error("A profile on this device already uses that email.");
-      const linked: StoredAccount = {
-        ...existing,
-        ...passwordRecord,
-        name: name.trim() || existing.name,
-        providers: [...providersFor(existing), "password"],
-      };
-      all[index] = linked;
-      saveAccounts(all);
-      return openSession(linked);
+  async signUp(name: string, email: string, password: string): Promise<SignUpResult> {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: { data: { name: name.trim(), full_name: name.trim() } },
+    });
+    if (error) throw error;
+    if (!data.session || !data.user) {
+      return { account: null, needsEmailConfirmation: true };
     }
-
-    const account: StoredAccount = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      email: normalizedEmail,
-      ...passwordRecord,
-      providers: ["password"],
-      verified: false,
-    };
-    saveAccounts([...all, account]);
-    return openSession(account);
+    return { account: await accountWithProfile(data.user), needsEmailConfirmation: false };
   },
 
   async login(email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
-    const all = accounts();
-    const index = all.findIndex((account) => account.email === normalizedEmail);
-    const account = all[index];
-    if (!account?.passwordHash || !providersFor(account).includes("password")) {
-      throw new Error("Use Continue with Google for that account, or create a local password first.");
-    }
-
-    const matches = account.passwordSalt
-      ? await passwordHash(password, saltFromHex(account.passwordSalt), account.passwordIterations || PASSWORD_ITERATIONS) === account.passwordHash
-      : await legacyHash(password) === account.passwordHash;
-    if (!matches) throw new Error("That email and password do not match this device.");
-
-    if (!account.passwordSalt) {
-      const upgraded = { ...account, ...(await makePasswordRecord(password)), providers: providersFor(account) };
-      all[index] = upgraded;
-      saveAccounts(all);
-      return openSession(upgraded);
-    }
-    return openSession(account);
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    if (error) throw error;
+    return accountWithProfile(data.user);
   },
 
-  signInWithGoogle(profile: GoogleIdentityProfile) {
-    const all = accounts();
-    const index = all.findIndex((account) => account.googleSubject === profile.id || account.email === profile.email);
-    if (index >= 0) {
-      const existing = all[index];
-      const linked: StoredAccount = {
-        ...existing,
-        googleSubject: profile.id,
-        providers: [...new Set([...providersFor(existing), "google" as const])],
-        verified: true,
-      };
-      all[index] = linked;
-      saveAccounts(all);
-      return { account: openSession(linked), isNew: false };
-    }
-
-    const account: StoredAccount = {
-      id: crypto.randomUUID(),
-      name: profile.name,
-      email: profile.email,
-      googleSubject: profile.id,
-      providers: ["google"],
-      verified: true,
-    };
-    saveAccounts([...all, account]);
-    return { account: openSession(account), isNew: true };
+  async signInWithGoogle(identity: GoogleIdentityCredential) {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: identity.credential,
+      nonce: identity.nonce,
+    });
+    if (error) throw error;
+    const account = await accountWithProfile(data.user);
+    return { account, isNew: !account.onboarded };
   },
 
-  logout() {
-    window.localStorage.removeItem(SESSION_KEY);
+  async logout() {
+    if (!supabaseConfigured()) return;
+    const { error } = await getSupabaseClient().auth.signOut();
+    if (error) throw error;
   },
 
-  session() {
-    if (typeof window === "undefined") return null;
-    return window.localStorage.getItem(SESSION_KEY);
+  async current() {
+    if (!supabaseConfigured()) return null;
+    const { data, error } = await getSupabaseClient().auth.getUser();
+    if (error || !data.user) return null;
+    return accountWithProfile(data.user);
   },
 
-  current() {
-    const email = this.session();
-    if (!email) return null;
-    const account = accounts().find((item) => item.email === email);
-    return account ? publicAccount(account) : null;
+  async resetPassword(email: string) {
+    const { error } = await getSupabaseClient().auth.resetPasswordForEmail(email.trim().toLowerCase());
+    if (error) throw error;
   },
 
-  async resetPassword(email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
-    const all = accounts();
-    const index = all.findIndex((item) => item.email === normalizedEmail);
-    if (index < 0) throw new Error("No profile on this device uses that email.");
-    if (!providersFor(all[index]).includes("password")) {
-      throw new Error("That account uses Google sign-in and does not have a local password.");
-    }
-    all[index] = { ...all[index], ...(await makePasswordRecord(password)), providers: providersFor(all[index]) };
-    saveAccounts(all);
+  async updatePassword(password: string) {
+    const { error } = await getSupabaseClient().auth.updateUser({ password });
+    if (error) throw error;
+  },
+
+  onRecovery(callback: () => void) {
+    if (!supabaseConfigured()) return () => undefined;
+    const { data } = getSupabaseClient().auth.onAuthStateChange((event: AuthChangeEvent) => {
+      if (event === "PASSWORD_RECOVERY") callback();
+    });
+    return () => data.subscription.unsubscribe();
+  },
+
+  async updateProfile(id: string, values: Partial<Profile>) {
+    const payload: Record<string, unknown> = {};
+    if (values.name !== undefined) payload.name = values.name;
+    if (values.email !== undefined) payload.email = values.email;
+    if (values.initials !== undefined) payload.initials = values.initials;
+    if (values.field !== undefined) payload.field = values.field;
+    if (values.focusWindow !== undefined) payload.focus_window = values.focusWindow;
+    if (values.learningMethods !== undefined) payload.learning_methods = values.learningMethods;
+    if (values.obstacles !== undefined) payload.obstacles = values.obstacles;
+    if (values.onboarded !== undefined) payload.onboarded = values.onboarded;
+    if (!Object.keys(payload).length) return;
+    const { error } = await getSupabaseClient().from("profiles").update(payload).eq("id", id);
+    if (error) throw error;
   },
 };

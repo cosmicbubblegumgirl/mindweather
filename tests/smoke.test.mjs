@@ -14,21 +14,21 @@ test("the landing page presents the simpler product story", async () => {
   assert.match(html, /Plan for the brain/i);
   assert.match(html, /Three steps\. No dashboard maze/i);
   assert.match(html, /Four clear places/i);
+  assert.doesNotMatch(html, />Open MindWeather</i);
 });
 
-test("the weather station keeps the core check-in and rescue tools", async () => {
+test("the weather station is hidden until Supabase verifies the account", async () => {
   const html = await page("station/index.html");
-  assert.match(html, /What kind of brain day/i);
-  assert.match(html, /Anxiety Rescue/i);
-  assert.match(html, /ADHD Rescue/i);
-  assert.match(html, /Today’s pace/i);
+  assert.match(html, /ACCOUNT REQUIRED/i);
+  assert.match(html, /Checking your secure session/i);
+  assert.doesNotMatch(html, /simone@mindweather\.local/i);
 });
 
 test("the key entry points are exported", async () => {
   const routes = [
     ["login/index.html", /Open your weather station/i],
-    ["signup/index.html", /Create a device profile/i],
-    ["forgot-password/index.html", /Choose a new key/i],
+    ["signup/index.html", /Create your account/i],
+    ["forgot-password/index.html", /Reset your password/i],
     ["mobile/index.html", /iPhone install|Android install/i],
     ["privacy/google-data/index.html", /Google sign-in/i],
     ["terms/index.html", /Terms of Service/i],
@@ -41,8 +41,22 @@ test("the account entry points expose Google sign-in and GitHub Pages-safe links
   const landing = await page();
   assert.match(login, /Continue with Google/i);
   assert.match(login, /Calendar permission stays separate/i);
-  assert.match(landing, /href="\/mindweather\/login\/?"/i);
-  assert.match(landing, /href="\/mindweather\/signup\/?"/i);
+  assert.doesNotMatch(login, /Continue without an account/i);
+  assert.match(landing, /href="(?:\/mindweather)?\/login\/?"/i);
+  assert.match(landing, /href="(?:\/mindweather)?\/signup\/?"/i);
+});
+
+test("accounts and study data use authenticated Supabase storage", async () => {
+  const authSource = await readFile(new URL("../services/authService.ts", import.meta.url), "utf8");
+  const storageSource = await readFile(new URL("../services/storageService.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/0001_mindweather.sql", import.meta.url), "utf8");
+  assert.match(authSource, /signInWithPassword/);
+  assert.match(authSource, /signInWithIdToken/);
+  assert.match(authSource, /auth\.getUser\(\)/);
+  assert.match(storageSource, /from\("app_states"\)/);
+  assert.match(storageSource, /mindweather\.user\.v2/);
+  assert.match(migration, /revoke all on all tables in schema public from anon/i);
+  assert.match(migration, /to authenticated using \(\(select auth\.uid\(\)\)/i);
 });
 
 test("Google sign-in never auto-selects an account and connected calendars auto-refresh", async () => {
@@ -50,6 +64,7 @@ test("Google sign-in never auto-selects an account and connected calendars auto-
   const calendarSource = await readFile(new URL("../features/calendar/CalendarView.tsx", import.meta.url), "utf8");
   assert.match(identitySource, /auto_select:\s*false/);
   assert.doesNotMatch(identitySource, /auto_select:\s*true/);
+  assert.match(identitySource, /nonce:/);
   assert.match(calendarSource, /if \(status\.connected\) void syncNow\(\)/);
   assert.match(calendarSource, /refreshes automatically while this browser session is open/i);
 });

@@ -17,7 +17,7 @@ const supportOptions: { label: string; value: Preferences["overwhelmAction"] }[]
 
 export function OnboardingPage() {
   const router = useRouter();
-  const { state, updateProfile, updatePreferences } = useMindWeather();
+  const { state, updateProfile, updatePreferences, updateSubjects } = useMindWeather();
   const [step, setStep] = useState(0);
   const [field, setField] = useState(state.profile.field || "");
   const [subjects, setSubjects] = useState(state.subjects.slice(0, 3).map((item) => item.name).join(", "));
@@ -25,7 +25,13 @@ export function OnboardingPage() {
   const [obstacles, setObstacles] = useState<string[]>(state.profile.obstacles ?? []);
   const [learning, setLearning] = useState<string[]>(state.profile.learningMethods ?? []);
   const [support, setSupport] = useState<Preferences["overwhelmAction"]>(state.preferences.overwhelmAction);
-  const finish = () => { updateProfile({ field, focusWindow, obstacles, learningMethods: learning, onboarded: true }); updatePreferences({ overwhelmAction: support }); router.push("/station"); };
+  const finish = () => {
+    updateProfile({ field, focusWindow, obstacles, learningMethods: learning, onboarded: true });
+    updatePreferences({ overwhelmAction: support });
+    const subjectNames = subjects.split(",").map((item) => item.trim()).filter(Boolean);
+    if (subjectNames.length) updateSubjects(subjectNames);
+    router.push("/station");
+  };
   const canContinue = step === 0 ? field.trim().length > 1 : step === 1 ? subjects.trim().length > 1 : step === 3 ? obstacles.length > 0 : step === 4 ? learning.length > 0 : true;
   return <main className="onboarding-page"><WeatherBackdrop weather="clear" /><header><Brand /><span>STUDY DNA · {step + 1} OF 7</span><button className="button button--ghost button--small" onClick={() => finish()}>Skip for now</button></header><div className="onboarding-progress"><span style={{ width: `${((step + 1) / 7) * 100}%` }} /></div><section className="onboarding-stage"><aside><Bloop mood={step === 6 ? "celebrating" : step === 3 ? "thinking" : "encouraging"} size="lg" /><p>{["Let’s start with the big picture.", "A rough list is perfect.", "No need to be exact.", "Pick as many as feel familiar.", "You can be more than one kind of learner.", "This helps on difficult days.", "That’s enough to begin."][step]}</p></aside><AnimatePresence mode="wait"><motion.div key={step} className="onboarding-card panel" initial={{ opacity: 0, x: 22 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
       {step === 0 && <><span>HELLO, {state.profile.name.toUpperCase()}</span><h1>What are you studying?</h1><p>Use the language you would use with a friend.</p><input className="onboarding-main-input" autoFocus value={field} onChange={(event) => setField(event.target.value)} placeholder="Interaction design and frontend…" /></>}

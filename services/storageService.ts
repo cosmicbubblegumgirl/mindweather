@@ -1,61 +1,116 @@
 import { demoState } from "@/lib/demo-data";
-import type { AppState } from "@/lib/types";
+import type { AppState, Profile } from "@/lib/types";
+import { getSupabaseClient } from "@/services/supabaseClient";
 
-export const STORAGE_KEY = "mindweather.local.v1";
+export const STORAGE_PREFIX = "mindweather.user.v2";
 export const STORAGE_EVENT = "mindweather:storage";
 
-function cloneDemo(): AppState {
-  return JSON.parse(JSON.stringify(demoState)) as AppState;
+type AccountProfile = Pick<Profile, "id" | "name" | "email" | "initials">;
+
+function clone<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function normalize(state: Partial<AppState>): AppState {
-  const base = cloneDemo();
-  const subjects = [...(state.subjects ?? [])];
-  for (const subject of base.subjects) {
-    if (!subjects.some((item) => item.id === subject.id)) subjects.push(subject);
-  }
+function storageKey(userId: string) {
+  return `${STORAGE_PREFIX}.${userId}`;
+}
 
-  const tasks = [...(state.tasks ?? [])];
-  for (const task of base.tasks.filter((item) => item.id.startsWith("classroom-") || item.id.startsWith("seed-task-"))) {
-    if (!tasks.some((item) => item.id === task.id)) tasks.push(task);
-  }
+function defaultProfile(account: AccountProfile): Profile {
+  return {
+    ...account,
+    field: "",
+    focusWindow: "",
+    learningMethods: [],
+    obstacles: [],
+    onboarded: false,
+  };
+}
 
-  const profile = { ...base.profile, ...(state.profile ?? {}) };
-  if (profile.field === "Software Development & Design Thinking") profile.field = base.profile.field;
+export function createAccountState(account: AccountProfile): AppState {
+  return {
+    version: demoState.version,
+    profile: defaultProfile(account),
+    preferences: clone(demoState.preferences),
+    subjects: [{ id: "general", name: "General", color: "#8fe7dd", icon: "GE" }],
+    tasks: [],
+    weatherCheckins: [],
+    sessions: [],
+    concepts: [],
+    mistakes: [],
+    ghostNotes: [],
+    journal: [],
+    assignments: [],
+    notifications: [],
+    wellbeingCheckins: [],
+    dna: [],
+    freezeMode: false,
+    currentWeather: "breezy",
+  };
+}
 
+function normalize(value: Partial<AppState>, account: AccountProfile): AppState {
+  const base = createAccountState(account);
   return {
     ...base,
-    ...state,
-    subjects,
-    tasks,
-    preferences: { ...base.preferences, ...(state.preferences ?? {}) },
-    profile,
-    wellbeingCheckins: state.wellbeingCheckins ?? [],
+    ...value,
+    version: demoState.version,
+    profile: { ...base.profile, ...(value.profile ?? {}), ...account },
+    preferences: { ...base.preferences, ...(value.preferences ?? {}) },
+    subjects: value.subjects?.length ? value.subjects : base.subjects,
+    tasks: value.tasks ?? [],
+    weatherCheckins: value.weatherCheckins ?? [],
+    sessions: value.sessions ?? [],
+    concepts: value.concepts ?? [],
+    mistakes: value.mistakes ?? [],
+    ghostNotes: value.ghostNotes ?? [],
+    journal: value.journal ?? [],
+    assignments: value.assignments ?? [],
+    notifications: value.notifications ?? [],
+    wellbeingCheckins: value.wellbeingCheckins ?? [],
+    dna: value.dna ?? [],
   };
 }
 
 export const storageService = {
-  load(): AppState {
-    if (typeof window === "undefined") return cloneDemo();
+  load(userId: string, account: AccountProfile): AppState {
+    if (typeof window === "undefined") return createAccountState(account);
     try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (!stored) return cloneDemo();
-      const parsed = JSON.parse(stored) as Partial<AppState>;
-      return parsed.version === demoState.version ? normalize(parsed) : cloneDemo();
+      const stored = window.localStorage.getItem(storageKey(userId));
+      if (!stored) return createAccountState(account);
+      return normalize(JSON.parse(stored) as Partial<AppState>, account);
     } catch {
-      return cloneDemo();
+      return createAccountState(account);
     }
   },
 
-  save(state: AppState) {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: state }));
+  async loadRemote(userId: string, account: AccountProfile) {
+    const { data, error } = await getSupabaseClient()
+      .from("app_states")
+      .select("state")
+      .eq("user_id", userId)
+      .maybeSingle<{ state: Partial<AppState> }>();
+    if (error) throw error;
+    return data?.state ? normalize(data.state, account) : null;
   },
 
-  reset(): AppState {
-    const state = cloneDemo();
-    this.save(state);
+  save(userId: string, state: AppState) {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(storageKey(userId), JSON.stringify(state));
+    window.dispatchEvent(new CustomEvent(STORAGE_EVENT, { detail: { userId, state } }));
+  },
+
+  async saveRemote(userId: string, state: AppState) {
+    const { error } = await getSupabaseClient().from("app_states").upsert({
+      user_id: userId,
+      state,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+    if (error) throw error;
+  },
+
+  reset(userId: string, account: AccountProfile) {
+    const state = createAccountState(account);
+    this.save(userId, state);
     return state;
   },
 
@@ -69,8 +124,8 @@ export const storageService = {
     URL.revokeObjectURL(url);
   },
 
-  clear() {
+  clear(userId: string) {
     if (typeof window === "undefined") return;
-    window.localStorage.removeItem(STORAGE_KEY);
+    window.localStorage.removeItem(storageKey(userId));
   },
 };

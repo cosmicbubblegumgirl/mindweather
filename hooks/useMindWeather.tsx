@@ -1,14 +1,15 @@
 "use client";
 
-import { demoState } from "@/lib/demo-data";
 import { localPlanner } from "@/lib/planningEngine";
 import type { AppState, Concept, GhostNote, JournalEntry, Mistake, PlanStep, Preferences, StudySession, StudyTask, WeatherId, WellbeingCheckin } from "@/lib/types";
+import type { AuthAccount } from "@/services/authService";
+import { authService } from "@/services/authService";
 import { assignmentService } from "@/services/assignmentService";
 import { constellationService } from "@/services/constellationService";
 import { mistakeService } from "@/services/mistakeService";
 import { notificationService } from "@/services/notificationService";
 import { sessionService } from "@/services/sessionService";
-import { storageService } from "@/services/storageService";
+import { createAccountState, storageService } from "@/services/storageService";
 import { studyDNAService } from "@/services/studyDNAService";
 import { taskService } from "@/services/taskService";
 import { weatherService } from "@/services/weatherService";
@@ -22,6 +23,7 @@ interface MindWeatherContextValue {
   plan: PlanStep[];
   planDone: string[];
   celebration: number;
+  activateAccount(account: AuthAccount): Promise<void>;
   selectWeather(weather: WeatherId, sliders?: { energy: number; focus: number; stress: number; motivation: number }): void;
   createTask(task: TaskDraft): void;
   updateTask(id: string, changes: Partial<StudyTask>): void;
@@ -41,6 +43,7 @@ interface MindWeatherContextValue {
   recordWellbeingCheckin(values: Omit<WellbeingCheckin, "id" | "createdAt">): void;
   updatePreferences(values: Partial<Preferences>): void;
   updateProfile(values: Partial<AppState["profile"]>): void;
+  updateSubjects(names: string[]): void;
   respondToDNA(id: string, confirmed: boolean): void;
   updateAssignmentSection(assignmentId: string, sectionId: string, changes: Parameters<typeof assignmentService.updateSection>[3]): void;
   markNotification(id: string): void;
@@ -53,23 +56,71 @@ interface MindWeatherContextValue {
 const MindWeatherContext = createContext<MindWeatherContextValue | null>(null);
 
 export function MindWeatherProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(() => JSON.parse(JSON.stringify(demoState)) as AppState);
+  const [state, setState] = useState<AppState>(() => createAccountState({ id: "anonymous", name: "Learner", email: "", initials: "MW" }));
   const [hydrated, setHydrated] = useState(false);
+  const [activeUserId, setActiveUserId] = useState<string | null>(null);
   const [planDone, setPlanDone] = useState<string[]>([]);
   const [celebration, setCelebration] = useState(0);
 
-  useEffect(() => {
-    const localState = storageService.load();
-    const frame = window.requestAnimationFrame(() => {
-      setState(localState);
-      setHydrated(true);
-    });
-    return () => window.cancelAnimationFrame(frame);
+  const activateAccount = useCallback(async (account: AuthAccount) => {
+    const accountProfile = {
+      id: account.id,
+      name: account.name,
+      email: account.email,
+      initials: account.name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "MW",
+    };
+    setHydrated(false);
+    setActiveUserId(account.id);
+    const localState = storageService.load(account.id, accountProfile);
+    let nextState = localState;
+    try {
+      const remoteState = await storageService.loadRemote(account.id, accountProfile);
+      if (remoteState) nextState = remoteState;
+      else await storageService.saveRemote(account.id, localState);
+    } catch (error) {
+      console.error("MindWeather could not load the protected cloud copy.", error);
+    }
+    storageService.save(account.id, nextState);
+    setState(nextState);
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) storageService.save(state);
-  }, [hydrated, state]);
+    let active = true;
+    void authService.current().then((account) => {
+      if (!active) return;
+      if (account) void activateAccount(account);
+      else setHydrated(true);
+    });
+    return () => { active = false; };
+  }, [activateAccount]);
+
+  useEffect(() => authService.onRecovery(() => {
+    if (window.location.pathname.endsWith("/forgot-password/") || window.location.pathname.endsWith("/forgot-password")) return;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+    window.location.replace(`${basePath}/forgot-password/`);
+  }), []);
+
+  useEffect(() => {
+    if (!hydrated || !activeUserId) return;
+    storageService.save(activeUserId, state);
+    const timer = window.setTimeout(() => {
+      void storageService.saveRemote(activeUserId, state).catch((error) => {
+        console.error("MindWeather could not sync the protected cloud copy.", error);
+      });
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [activeUserId, hydrated, state]);
+
+  useEffect(() => {
+    if (!hydrated || !activeUserId) return;
+    const timer = window.setTimeout(() => {
+      void authService.updateProfile(activeUserId, state.profile).catch((error) => {
+        console.error("MindWeather could not sync the account profile.", error);
+      });
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [activeUserId, hydrated, state.profile]);
 
   const plan = useMemo(() => localPlanner.createPlan(state, state.currentWeather), [state]);
 
@@ -81,6 +132,7 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
     plan,
     planDone,
     celebration,
+    activateAccount,
     selectWeather(weather, sliders = { energy: 3, focus: 3, stress: 3, motivation: 3 }) {
       change((current) => weatherService.checkIn(current, weather, sliders));
       setPlanDone([]);
@@ -125,7 +177,7 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
         const session: StudySession = {
           id: crypto.randomUUID(),
           taskId: current.currentSession.taskId,
-          subjectId: task?.subjectId ?? current.subjects[0].id,
+          subjectId: task?.subjectId ?? current.subjects[0]?.id ?? "general",
           minutes: Math.round(current.currentSession.totalSeconds / 60),
           method: task?.type === "Read" ? "reading" : "practice",
           completedAt: new Date().toISOString(),
@@ -144,14 +196,37 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
     recordWellbeingCheckin(values) { change((current) => ({ ...current, wellbeingCheckins: [{ ...values, id: crypto.randomUUID(), createdAt: new Date().toISOString() }, ...current.wellbeingCheckins] })); },
     updatePreferences(values) { change((current) => ({ ...current, preferences: { ...current.preferences, ...values } })); },
     updateProfile(values) { change((current) => ({ ...current, profile: { ...current.profile, ...values } })); },
+    updateSubjects(names) {
+      const colors = ["#8fe7dd", "#ffb58b", "#d6c377", "#c7b8ff", "#ffd7e5"];
+      change((current) => ({
+        ...current,
+        subjects: names.filter(Boolean).map((name, index) => {
+          const existing = current.subjects.find((subject) => subject.name.toLowerCase() === name.toLowerCase());
+          return existing ?? {
+            id: crypto.randomUUID(),
+            name,
+            color: colors[index % colors.length],
+            icon: name.split(/\s+/).map((word) => word[0]).join("").slice(0, 2).toUpperCase() || "ST",
+          };
+        }),
+      }));
+    },
     respondToDNA(id, confirmed) { change((current) => studyDNAService.respond(current, id, confirmed)); },
     updateAssignmentSection(assignmentId, sectionId, changes) { change((current) => assignmentService.updateSection(current, assignmentId, sectionId, changes)); },
     markNotification(id) { change((current) => notificationService.markRead(current, id)); },
     markAllNotifications() { change((current) => notificationService.markAllRead(current)); },
     downloadData() { storageService.download(state); },
-    resetDemo() { setState(storageService.reset()); setPlanDone([]); },
-    deleteData() { storageService.clear(); setState({ ...storageService.reset(), tasks: [], sessions: [], weatherCheckins: [], concepts: [], mistakes: [], ghostNotes: [], journal: [], notifications: [], wellbeingCheckins: [] }); },
-  }), [state, hydrated, plan, planDone, celebration, change]);
+    resetDemo() {
+      if (!activeUserId) return;
+      setState(storageService.reset(activeUserId, state.profile));
+      setPlanDone([]);
+    },
+    deleteData() {
+      if (!activeUserId) return;
+      storageService.clear(activeUserId);
+      setState(createAccountState(state.profile));
+    },
+  }), [state, hydrated, plan, planDone, celebration, activateAccount, activeUserId, change]);
 
   return <MindWeatherContext.Provider value={value}>{children}</MindWeatherContext.Provider>;
 }
