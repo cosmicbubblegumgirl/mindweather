@@ -31,9 +31,9 @@ export function LandingPage() {
 
       <section className="simple-hero shell-width">
         <div className="simple-hero__copy">
-          <span className="eyebrow"><i /> A calmer way to study</span>
-          <h1>Plan for the brain<br />you have <em>today.</em></h1>
-          <p>Check how you’re feeling, get a realistic plan, and focus on one thing at a time. Your calendar and study work stay together without the usual noise.</p>
+          <span className="eyebrow"><i /> MindWeather · A calmer way to study</span>
+          <h1>MindWeather:<br />Plan for the brain<br />you have <em>today.</em></h1>
+          <p>MindWeather is a study-planning web app that turns a quick energy, focus and stress check-in into a realistic plan. Focus on one task at a time, and optionally connect Google Calendar to view upcoming events alongside your study work.</p>
           <div className="hero-actions">
             <Link href="/signup" className="button button--peach">Create your account <ArrowRight size={18} /></Link>
             <a href="#how-it-works" className="simple-text-link">See how it works</a>
