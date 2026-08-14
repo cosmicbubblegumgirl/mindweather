@@ -7,12 +7,14 @@ import "./calm.css";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mymindweather.study"),
   title: {
     default: "MindWeather — Study for the brain you have today",
     template: "%s · MindWeather",
   },
   description: "A calm, adaptive study environment that reshapes the plan around the capacity you have today.",
   applicationName: "MindWeather",
+  authors: [{ name: "Simoné Govender" }],
   icons: {
     icon: `${basePath}/favicon.svg`,
     shortcut: `${basePath}/favicon.svg`,
