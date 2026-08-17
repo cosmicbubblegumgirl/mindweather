@@ -23,6 +23,7 @@ export const demoState: AppState = {
   },
   preferences: {
     theme: "atmospheric",
+    supportMode: "flexible",
     reduceMotion: false,
     largeText: false,
     highContrast: false,

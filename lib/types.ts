@@ -6,6 +6,25 @@ export type WeatherId =
   | "hyperfocus"
   | "foggy";
 
+export type ThemeId =
+  | "atmospheric"
+  | "midnight"
+  | "cloudlight"
+  | "contrast"
+  | "aurora"
+  | "ocean"
+  | "meadow"
+  | "ember";
+
+export type SupportMode =
+  | "flexible"
+  | "adhd"
+  | "anxiety"
+  | "low-energy"
+  | "trauma-aware"
+  | "sensory"
+  | "reading";
+
 export type ViewId =
   | "weather"
   | "plan"
@@ -22,6 +41,7 @@ export type ViewId =
   | "wellbeing"
   | "research"
   | "mobile"
+  | "more"
   | "settings";
 
 export type TaskStatus = "inbox" | "planned" | "working" | "blocked" | "done";
@@ -184,7 +204,8 @@ export interface StudyDNAMetric {
 }
 
 export interface Preferences {
-  theme: "atmospheric" | "midnight" | "cloudlight" | "contrast";
+  theme: ThemeId;
+  supportMode: SupportMode;
   reduceMotion: boolean;
   largeText: boolean;
   highContrast: boolean;

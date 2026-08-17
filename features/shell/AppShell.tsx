@@ -9,6 +9,7 @@ import { ForecastView } from "@/features/forecast/ForecastView";
 import { GardenView } from "@/features/garden/GardenView";
 import { JournalView } from "@/features/journal/JournalView";
 import { MobileInstallView } from "@/features/mobile/MobileInstallView";
+import { MoreView } from "@/features/more/MoreView";
 import { NotesView } from "@/features/notes/NotesView";
 import { PlanView } from "@/features/plan/PlanView";
 import { ResearchSurveyView } from "@/features/research/ResearchSurveyView";
@@ -22,7 +23,7 @@ import { useMindWeather } from "@/hooks/useMindWeather";
 import type { ViewId } from "@/lib/types";
 import { WEATHER } from "@/lib/weather";
 import { authService } from "@/services/authService";
-import { CalendarDays, CloudSun, Focus, ListTodo, Settings, ShieldCheck, WifiOff } from "lucide-react";
+import { CalendarDays, CloudSun, Focus, Grid2X2, ListTodo, Settings, ShieldCheck, WifiOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -31,6 +32,7 @@ const primaryNav = [
   { id: "plan" as const, label: "Plan", icon: ListTodo },
   { id: "focus" as const, label: "Focus", icon: Focus },
   { id: "calendar" as const, label: "Calendar", icon: CalendarDays },
+  { id: "more" as const, label: "Explore", icon: Grid2X2 },
 ];
 
 const viewLabels: Record<ViewId, string> = {
@@ -49,6 +51,7 @@ const viewLabels: Record<ViewId, string> = {
   wellbeing: "Rescue tools",
   research: "Research Survey",
   mobile: "Mobile App",
+  more: "Explore",
   settings: "Settings",
 };
 
@@ -68,6 +71,7 @@ const componentMap: Record<ViewId, React.ComponentType<{ navigate?(view: ViewId)
   wellbeing: WellbeingView,
   research: ResearchSurveyView,
   mobile: MobileInstallView,
+  more: MoreView,
   settings: SettingsView,
 };
 
@@ -174,6 +178,7 @@ export function AppShell() {
         <div className="app-view simple-view" key={view}>
           <ActiveView navigate={navigate} />
         </div>
+        <footer className="product-footer"><span>Made by <strong>Quantum Cupcake</strong></span><small>Designed for real learners on changing days.</small></footer>
       </section>
 
       <nav className="mobile-nav simple-mobile-nav panel" aria-label="Main navigation">

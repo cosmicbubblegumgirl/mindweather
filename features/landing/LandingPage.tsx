@@ -2,7 +2,7 @@
 
 import { Brand } from "@/components/brand/Brand";
 import { WeatherBackdrop } from "@/components/brand/WeatherBackdrop";
-import { ArrowRight, CalendarDays, Check, CloudSun, Focus, ListTodo, Menu, ShieldCheck, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, CloudSun, Focus, Grid2X2, HeartPulse, ListTodo, Menu, ShieldCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -57,12 +57,14 @@ export function LandingPage() {
       </section>
 
       <section id="what-you-get" className="simple-section simple-features shell-width">
-        <header><span className="eyebrow">Everything you need</span><h2>Four clear places.</h2></header>
+        <header><span className="eyebrow">Everything you need</span><h2>Four anchors. One complete toolbox.</h2></header>
         <div>
           <article><CloudSun /><span><strong>Today</strong><small>Check your weather and choose a realistic pace.</small></span></article>
           <article><ListTodo /><span><strong>Plan</strong><small>See the study steps that matter now.</small></span></article>
           <article><Focus /><span><strong>Focus</strong><small>Work in a gentle, contained session.</small></span></article>
           <article><CalendarDays /><span><strong>Calendar</strong><small>Bring Google events and study work into one view.</small></span></article>
+          <article><Grid2X2 /><span><strong>Explore</strong><small>Find every tool, from Ghost Notes to the Mistake Garden.</small></span></article>
+          <article><HeartPulse /><span><strong>Rescue tools</strong><small>Use practical study supports without turning preferences into labels.</small></span></article>
         </div>
       </section>
 
@@ -71,7 +73,7 @@ export function LandingPage() {
         <Link href="/signup" className="button button--light">Create account <ArrowRight /></Link>
       </section>
 
-      <footer className="simple-footer shell-width"><Brand /><p>A private study companion for changing brain days.</p><Link href="/terms">Terms of service</Link><Link href="/privacy/google-data">Google data & privacy</Link></footer>
+      <footer className="simple-footer shell-width"><Brand /><p>A private study companion for changing brain days.</p><span className="made-by">Made by <strong>Quantum Cupcake</strong></span><Link href="/terms">Terms of service</Link><Link href="/privacy/google-data">Google data & privacy</Link></footer>
     </main>
   );
 }

@@ -26,7 +26,7 @@ export function MobilePage() {
         <article id="ios" className="mobile-platform panel"><span className="mobile-platform__icon"><Smartphone /></span><div><span>iOS · iPhone &amp; iPad</span><h2>Add to your Home Screen</h2><ol><li><Check /> Open MindWeather in Safari.</li><li><Check /> Tap Share, then &quot;Add to Home Screen&quot;.</li><li><Check /> Open the new icon like a private app.</li></ol><Link href="/login" className="button button--ghost button--small">Sign in first <Sparkles /></Link><InstallQr platform="ios" label="iOS" /></div></article>
         <article id="android" className="mobile-platform panel"><span className="mobile-platform__icon"><Download /></span><div><span>Android · phones &amp; tablets</span><h2>Install from your browser</h2><ol><li><Check /> Open MindWeather in Chrome.</li><li><Check /> Tap the menu, then &quot;Install app&quot;.</li><li><Check /> Confirm and keep studying offline.</li></ol><Link href="/login" className="button button--ghost button--small">Sign in first <Sparkles /></Link><InstallQr platform="android" label="Android" /></div></article>
       </section>
-      <footer className="mobile-page__footer"><Bloop mood="happy" size="sm" /><span>One calm little app for real brains on real days.</span><Link href="/signup">Create a private profile <Sparkles /></Link></footer>
+      <footer className="mobile-page__footer"><Bloop mood="happy" size="sm" /><span>One calm little app for real brains on real days. <strong>Made by Quantum Cupcake.</strong></span><Link href="/signup">Create a private profile <Sparkles /></Link></footer>
     </main>
   );
 }

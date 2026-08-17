@@ -1,4 +1,4 @@
-import type { AppState, PlanStep, WeatherId } from "@/lib/types";
+import type { AppState, PlanStep, SupportMode, WeatherId } from "@/lib/types";
 
 export interface TeachingContext {
   subject?: string;
@@ -24,16 +24,29 @@ const limits: Record<WeatherId, { maxStep: number; count: number }> = {
   foggy: { maxStep: 12, count: 3 },
 };
 
+const supportProfiles: Record<SupportMode, { maxStep: number; count: number; reason: string; pause?: { title: string; minutes: number; reason: string } }> = {
+  flexible: { maxStep: 60, count: 4, reason: "Fits your focus, energy, and deadline pattern" },
+  adhd: { maxStep: 15, count: 4, reason: "A visible finish line with low switching cost", pause: { title: "Two-minute launch pad", minutes: 2, reason: "Clear the desk, open one file, and begin before negotiating with the task" } },
+  anxiety: { maxStep: 12, count: 3, reason: "Previewed, contained, and safe to pause", pause: { title: "Settle + preview", minutes: 3, reason: "See the next step before you commit to doing it" } },
+  "low-energy": { maxStep: 10, count: 3, reason: "The minimum useful version still counts", pause: { title: "Restorative pause", minutes: 4, reason: "Protect enough energy to return later" } },
+  "trauma-aware": { maxStep: 12, count: 3, reason: "Choice, predictability, and a clear exit are built in", pause: { title: "Choice point", minutes: 2, reason: "Continue, swap the task, or pause without losing progress" } },
+  sensory: { maxStep: 18, count: 3, reason: "Fewer transitions and a quieter sequence" },
+  reading: { maxStep: 15, count: 4, reason: "Short instructions with one action per step" },
+};
+
 export const localPlanner: StudyPlanner = {
   createPlan(state, weather) {
-    const { maxStep, count } = limits[weather];
+    const weatherLimit = limits[weather];
+    const support = supportProfiles[state.preferences.supportMode ?? "flexible"];
+    const maxStep = Math.min(weatherLimit.maxStep, support.maxStep);
+    const count = Math.min(weatherLimit.count, support.count);
     const open = state.tasks
       .filter((task) => task.status !== "done" && task.status !== "blocked")
       .sort((a, b) => b.priority - a.priority || new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
 
     const plan = open.slice(0, count).map((task, index): PlanStep => {
       const subject = state.subjects.find((item) => item.id === task.subjectId)?.name ?? "Study";
-      const gentle = weather === "storm" || weather === "battery" || weather === "foggy";
+      const gentle = weather === "storm" || weather === "battery" || weather === "foggy" || state.preferences.supportMode !== "flexible";
       const nextSubtask = task.subtasks.find((subtask) => !subtask.done);
       return {
         id: `plan-${task.id}-${weather}`,
@@ -42,12 +55,22 @@ export const localPlanner: StudyPlanner = {
         subject,
         minutes: Math.min(maxStep, Math.max(5, task.estimatedMinutes - task.actualMinutes)),
         kind: index === 1 && gentle ? "review" : "study",
-        reason: gentle ? "Small enough to enter without carrying the whole task" : "Fits your focus and deadline pattern",
+        reason: gentle ? support.reason : "Fits your focus and deadline pattern",
         done: false,
       };
     });
 
-    if (weather === "storm" || weather === "battery" || weather === "foggy") {
+    if (support.pause) {
+      plan.splice(1, 0, {
+        id: `plan-support-${state.preferences.supportMode}`,
+        title: support.pause.title,
+        subject: "Support",
+        minutes: support.pause.minutes,
+        kind: "reset",
+        reason: support.pause.reason,
+        done: false,
+      });
+    } else if (weather === "storm" || weather === "battery" || weather === "foggy") {
       plan.splice(1, 0, {
         id: `plan-reset-${weather}`,
         title: weather === "battery" ? "Water + window reset" : "Three-minute reset",
