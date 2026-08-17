@@ -24,6 +24,7 @@ export const demoState: AppState = {
   preferences: {
     theme: "atmospheric",
     supportMode: "flexible",
+    readingMode: "standard",
     reduceMotion: false,
     largeText: false,
     highContrast: false,
@@ -305,6 +306,42 @@ export const demoState: AppState = {
   journal: [
     { id: "j1", prompt: "What clicked today?", text: "Error states are part of the happy path, not an extra screen added at the end.", weather: "clear", subjectId: "frontend", tags: ["systems", "frontend"], createdAt: day(-3, 20) },
     { id: "j2", prompt: "What took more energy than expected?", text: "Naming the research themes. Tomorrow I’ll start with rough verbs before polished labels.", weather: "battery", subjectId: "research", tags: ["research"], createdAt: day(-1, 19) },
+  ],
+  notebooks: [
+    {
+      id: "notebook-evidence-map",
+      title: "Assessment evidence map",
+      kind: "homework",
+      subjectId: "thinking",
+      body: "Keep the brief, evidence checklist, declaration, and final upload link together. Start with the two missing citations before polishing the layout.",
+      dueDate: "2026-08-21",
+      stickers: ["🧁", "⚡"],
+      highlights: [{ id: "highlight-evidence", text: "Start with the two missing citations.", color: "sun", createdAt: day(-1, 18) }],
+      createdAt: day(-4, 14),
+      updatedAt: day(-1, 18),
+    },
+    {
+      id: "notebook-presentation-rehearsal",
+      title: "UX presentation rehearsal",
+      kind: "slides",
+      subjectId: "ux",
+      body: "One idea per slide. Explain the learner need before showing the feature. Pause after the prototype walkthrough for questions.",
+      stickers: ["🌈", "⭐"],
+      highlights: [{ id: "highlight-rehearsal", text: "Explain the learner need before showing the feature.", color: "mint", createdAt: day(-2, 16) }],
+      createdAt: day(-6, 12),
+      updatedAt: day(-2, 16),
+    },
+    {
+      id: "notebook-quiet-capture",
+      title: "Things I understood today",
+      kind: "note",
+      subjectId: "javascript",
+      body: "A promise has two paths: resolved and rejected. Draw both before deciding where the interface should update.",
+      stickers: ["💡", "👻"],
+      highlights: [],
+      createdAt: day(-2, 19),
+      updatedAt: day(-2, 19),
+    },
   ],
   assignments: [
     {

@@ -10,6 +10,7 @@ import { GardenView } from "@/features/garden/GardenView";
 import { JournalView } from "@/features/journal/JournalView";
 import { MobileInstallView } from "@/features/mobile/MobileInstallView";
 import { MoreView } from "@/features/more/MoreView";
+import { NotebookView } from "@/features/notebook/NotebookView";
 import { NotesView } from "@/features/notes/NotesView";
 import { PlanView } from "@/features/plan/PlanView";
 import { ResearchSurveyView } from "@/features/research/ResearchSurveyView";
@@ -44,6 +45,7 @@ const viewLabels: Record<ViewId, string> = {
   forecast: "Forecast",
   garden: "Mistake Garden",
   notes: "Notes",
+  notebook: "Quirky Notebook",
   constellation: "Constellation",
   rooms: "Quiet Rooms",
   journal: "Journal",
@@ -64,6 +66,7 @@ const componentMap: Record<ViewId, React.ComponentType<{ navigate?(view: ViewId)
   forecast: ForecastView,
   garden: GardenView,
   notes: NotesView,
+  notebook: NotebookView,
   constellation: ConstellationView,
   rooms: RoomsView,
   journal: JournalView,
@@ -134,7 +137,7 @@ export function AppShell() {
   }
 
   return (
-    <main className={`app-shell simple-shell app-shell--${state.currentWeather} theme--${state.preferences.theme} ${state.preferences.largeText ? "is-large-text" : ""} ${state.preferences.highContrast ? "is-high-contrast" : ""}`}>
+    <main className={`app-shell simple-shell app-shell--${state.currentWeather} theme--${state.preferences.theme} reading--${state.preferences.readingMode} ${state.preferences.largeText ? "is-large-text" : ""} ${state.preferences.highContrast ? "is-high-contrast" : ""}`}>
       <WeatherBackdrop weather={state.currentWeather} quiet />
 
       <aside className="app-sidebar simple-sidebar panel">

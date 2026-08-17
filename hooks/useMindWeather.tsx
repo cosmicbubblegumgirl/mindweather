@@ -1,13 +1,14 @@
 "use client";
 
 import { localPlanner } from "@/lib/planningEngine";
-import type { AppState, Concept, GhostNote, JournalEntry, Mistake, PlanStep, Preferences, StudySession, StudyTask, WeatherId, WellbeingCheckin } from "@/lib/types";
+import type { AppState, Concept, GhostNote, JournalEntry, Mistake, NotebookItem, PlanStep, Preferences, StudySession, StudyTask, WeatherId, WellbeingCheckin } from "@/lib/types";
 import type { AuthAccount } from "@/services/authService";
 import { authService } from "@/services/authService";
 import { assignmentService } from "@/services/assignmentService";
 import { constellationService } from "@/services/constellationService";
 import { mistakeService } from "@/services/mistakeService";
 import { notificationService } from "@/services/notificationService";
+import { notebookFileService } from "@/services/notebookFileService";
 import { sessionService } from "@/services/sessionService";
 import { createAccountState, storageService } from "@/services/storageService";
 import { studyDNAService } from "@/services/studyDNAService";
@@ -16,6 +17,7 @@ import { weatherService } from "@/services/weatherService";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type TaskDraft = Omit<StudyTask, "id" | "createdAt" | "actualMinutes" | "subtasks" | "conceptIds"> & { subtasks?: StudyTask["subtasks"] };
+type NotebookDraft = Omit<NotebookItem, "id" | "createdAt" | "updatedAt">;
 
 interface MindWeatherContextValue {
   state: AppState;
@@ -40,6 +42,9 @@ interface MindWeatherContextValue {
   addConcept(values: Omit<Concept, "id" | "level" | "confidence">): void;
   addGhostNote(values: Omit<GhostNote, "id" | "createdAt">): void;
   addJournalEntry(values: Omit<JournalEntry, "id" | "createdAt">): void;
+  addNotebookItem(values: NotebookDraft): string;
+  updateNotebookItem(id: string, changes: Partial<NotebookItem>): void;
+  deleteNotebookItem(id: string): void;
   recordWellbeingCheckin(values: Omit<WellbeingCheckin, "id" | "createdAt">): void;
   updatePreferences(values: Partial<Preferences>): void;
   updateProfile(values: Partial<AppState["profile"]>): void;
@@ -193,6 +198,19 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
     addConcept(values) { change((current) => ({ ...current, concepts: [...current.concepts, { ...values, id: crypto.randomUUID(), level: 0, confidence: 20 }] })); },
     addGhostNote(values) { change((current) => ({ ...current, ghostNotes: [{ ...values, id: crypto.randomUUID(), createdAt: new Date().toISOString() }, ...current.ghostNotes] })); },
     addJournalEntry(values) { change((current) => ({ ...current, journal: [{ ...values, id: crypto.randomUUID(), createdAt: new Date().toISOString() }, ...current.journal] })); },
+    addNotebookItem(values) {
+      const id = crypto.randomUUID();
+      const timestamp = new Date().toISOString();
+      change((current) => ({ ...current, notebooks: [{ ...values, id, createdAt: timestamp, updatedAt: timestamp }, ...current.notebooks] }));
+      return id;
+    },
+    updateNotebookItem(id, changes) {
+      change((current) => ({ ...current, notebooks: current.notebooks.map((item) => item.id === id ? { ...item, ...changes, updatedAt: new Date().toISOString() } : item) }));
+    },
+    deleteNotebookItem(id) {
+      change((current) => ({ ...current, notebooks: current.notebooks.filter((item) => item.id !== id) }));
+      void notebookFileService.remove(id).catch(() => undefined);
+    },
     recordWellbeingCheckin(values) { change((current) => ({ ...current, wellbeingCheckins: [{ ...values, id: crypto.randomUUID(), createdAt: new Date().toISOString() }, ...current.wellbeingCheckins] })); },
     updatePreferences(values) { change((current) => ({ ...current, preferences: { ...current.preferences, ...values } })); },
     updateProfile(values) { change((current) => ({ ...current, profile: { ...current.profile, ...values } })); },
@@ -218,12 +236,14 @@ export function MindWeatherProvider({ children }: { children: React.ReactNode })
     downloadData() { storageService.download(state); },
     resetDemo() {
       if (!activeUserId) return;
+      void notebookFileService.clear();
       setState(storageService.reset(activeUserId, state.profile));
       setPlanDone([]);
     },
     deleteData() {
       if (!activeUserId) return;
       storageService.clear(activeUserId);
+      void notebookFileService.clear();
       setState(createAccountState(state.profile));
     },
   }), [state, hydrated, plan, planDone, celebration, activateAccount, activeUserId, change]);

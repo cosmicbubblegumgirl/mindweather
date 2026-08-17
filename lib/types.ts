@@ -25,6 +25,8 @@ export type SupportMode =
   | "sensory"
   | "reading";
 
+export type ReadingMode = "standard" | "open-letter" | "hyperlegible";
+
 export type ViewId =
   | "weather"
   | "plan"
@@ -34,6 +36,7 @@ export type ViewId =
   | "forecast"
   | "garden"
   | "notes"
+  | "notebook"
   | "calendar"
   | "rooms"
   | "journal"
@@ -157,6 +160,32 @@ export interface JournalEntry {
   createdAt: string;
 }
 
+export type NotebookKind = "note" | "slides" | "homework" | "reading" | "other";
+export type HighlightColor = "sun" | "mint" | "lilac" | "coral";
+
+export interface NotebookHighlight {
+  id: string;
+  text: string;
+  color: HighlightColor;
+  createdAt: string;
+}
+
+export interface NotebookItem {
+  id: string;
+  title: string;
+  kind: NotebookKind;
+  subjectId: string;
+  body: string;
+  dueDate?: string;
+  fileName?: string;
+  fileType?: string;
+  fileSize?: number;
+  stickers: string[];
+  highlights: NotebookHighlight[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AssignmentSection {
   id: string;
   title: string;
@@ -206,6 +235,7 @@ export interface StudyDNAMetric {
 export interface Preferences {
   theme: ThemeId;
   supportMode: SupportMode;
+  readingMode: ReadingMode;
   reduceMotion: boolean;
   largeText: boolean;
   highContrast: boolean;
@@ -240,6 +270,7 @@ export interface AppState {
   mistakes: Mistake[];
   ghostNotes: GhostNote[];
   journal: JournalEntry[];
+  notebooks: NotebookItem[];
   assignments: Assignment[];
   notifications: NotificationItem[];
   wellbeingCheckins: WellbeingCheckin[];

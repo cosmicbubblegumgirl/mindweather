@@ -1,10 +1,11 @@
 "use client";
 
 import type { ViewId } from "@/lib/types";
-import { BarChart3, BrainCircuit, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, Flower2, Ghost, HeartPulse, NotebookPen, Settings, Smartphone, Sparkles, Users } from "lucide-react";
+import { BarChart3, BookMarked, BrainCircuit, CalendarDays, CheckCircle2, ChevronRight, ClipboardList, Flower2, Ghost, HeartPulse, NotebookPen, Settings, Smartphone, Sparkles, Users } from "lucide-react";
 
 const links: { id: ViewId; label: string; detail: string; icon: typeof BarChart3 }[] = [
   { id: "tasks", label: "Tasks", detail: "All the things hanging around", icon: CheckCircle2 },
+  { id: "notebook", label: "The Quirky Notebook", detail: "Files, stickers, highlights, and study tips", icon: BookMarked },
   { id: "forecast", label: "Brain Forecast", detail: "Patterns from your own history", icon: BarChart3 },
   { id: "constellation", label: "Knowledge Constellation", detail: "Connect ideas as they become clearer", icon: Sparkles },
   { id: "garden", label: "Mistake Garden", detail: "Things that taught you something", icon: Flower2 },
