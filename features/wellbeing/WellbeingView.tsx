@@ -3,8 +3,8 @@
 import { Bloop } from "@/components/brand/Bloop";
 import { Modal } from "@/components/ui/Modal";
 import { useMindWeather } from "@/hooks/useMindWeather";
-import type { ViewId, WellbeingBand, WellbeingKind } from "@/lib/types";
-import { Activity, ArrowRight, Check, CheckCircle2, Eye, HeartPulse, LifeBuoy, Pause, Phone, Play, RotateCcw, ShieldCheck, Sparkles, Wind, X } from "lucide-react";
+import type { SupportMode, ViewId, WellbeingBand, WellbeingKind } from "@/lib/types";
+import { Activity, ArrowRight, BatteryLow, BookOpenText, BrainCircuit, Check, CheckCircle2, Eye, HeartPulse, LifeBuoy, ListChecks, MousePointerClick, Pause, Phone, Play, RotateCcw, ShieldCheck, Shuffle, Sparkles, UserRound, VolumeX, Waves, Wind, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const questions = {
@@ -41,6 +41,25 @@ const unhookPrompts = [
 ] as const;
 
 type ReliefMode = "breathe" | "ground" | "unhook";
+type FrictionId = "start" | "choose" | "remember" | "sensory" | "perfect" | "read";
+
+const supportDeck: { id: SupportMode; label: string; detail: string; strategy: string; icon: typeof Activity }[] = [
+  { id: "adhd", label: "ADHD launchpad", detail: "When starting and switching feel expensive.", strategy: "Two-minute starts, visible finish lines, and short sprints.", icon: BrainCircuit },
+  { id: "anxiety", label: "Anxiety-aware", detail: "When uncertainty makes the task feel unsafe.", strategy: "Preview first, choose a pause point, then begin one contained step.", icon: ShieldCheck },
+  { id: "low-energy", label: "Low-energy", detail: "When depression, fatigue, or medication leaves less capacity.", strategy: "Minimum useful work, gentle pacing, and recovery room.", icon: BatteryLow },
+  { id: "trauma-aware", label: "Choice-led", detail: "When control and predictability matter most.", strategy: "Clear expectations, opt-out points, and no forced reflection.", icon: UserRound },
+  { id: "sensory", label: "Sensory calm", detail: "When noise, light, or transitions compete with learning.", strategy: "Fewer switches, quieter sequences, and planned decompression.", icon: Waves },
+  { id: "reading", label: "Reading support", detail: "When dense text is hard to hold or decode.", strategy: "One action per instruction, shorter chunks, and retrieval pauses.", icon: BookOpenText },
+];
+
+const frictionDoors: Record<FrictionId, { label: string; action: string; icon: typeof Activity }> = {
+  start: { label: "I cannot start", action: "Open the task and work for two minutes. Stopping after two still counts.", icon: MousePointerClick },
+  choose: { label: "Too many choices", action: "Choose the task with the nearest deadline. Hide every other task for ten minutes.", icon: Shuffle },
+  remember: { label: "I lose the steps", action: "Write the next three actions where you can see them. Cross out, do not erase.", icon: ListChecks },
+  sensory: { label: "The room is too loud", action: "Reduce one input, keep one grounding object nearby, and choose a no-switch block.", icon: VolumeX },
+  perfect: { label: "It has to be perfect", action: "Make a version that is allowed to be wrong. Your only job is to create something editable.", icon: Sparkles },
+  read: { label: "The words will not stick", action: "Read one paragraph, close it, and say one remembered idea out loud or in writing.", icon: Eye },
+};
 
 function bandFor(score: number): WellbeingBand {
   if (score <= 7) return "low-signal";
@@ -55,7 +74,7 @@ function bandCopy(band: WellbeingBand) {
 }
 
 export function WellbeingView({ navigate = () => undefined }: { navigate?(view: ViewId): void }) {
-  const { state, recordWellbeingCheckin } = useMindWeather();
+  const { state, recordWellbeingCheckin, updatePreferences } = useMindWeather();
   const [kind, setKind] = useState<WellbeingKind | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
   const [result, setResult] = useState<{ kind: WellbeingKind; score: number; band: WellbeingBand } | null>(null);
@@ -69,6 +88,7 @@ export function WellbeingView({ navigate = () => undefined }: { navigate?(view: 
   const [unhookPrompt, setUnhookPrompt] = useState(0);
   const [unhookText, setUnhookText] = useState("");
   const [unhookSaved, setUnhookSaved] = useState(false);
+  const [friction, setFriction] = useState<FrictionId | null>(null);
 
   useEffect(() => {
     if (!grounding || seconds <= 0) return;
@@ -164,6 +184,17 @@ export function WellbeingView({ navigate = () => undefined }: { navigate?(view: 
           </div>}
           {reliefMode === "unhook" && <div className="relief-unhook" role="tabpanel"><span className="relief-copy__eyebrow">A SOFTER QUESTION · {unhookPrompt + 1} / {unhookPrompts.length}</span><h3>{unhookPrompts[unhookPrompt]}</h3><textarea value={unhookText} onChange={(event) => { setUnhookText(event.target.value); setUnhookSaved(false); }} placeholder="A few words is enough. You can leave this blank." aria-label={unhookPrompts[unhookPrompt]} /><p>This is a private scratchpad for this moment. It disappears when you leave this screen; copy anything useful into your journal if you want to keep it.</p><div className="relief-actions"><button className="button button--peach" onClick={() => { if (unhookPrompt === unhookPrompts.length - 1) setUnhookSaved(true); else setUnhookPrompt((prompt) => prompt + 1); }}>{unhookPrompt === unhookPrompts.length - 1 ? "That is enough for now" : "Next gentle question"} <ArrowRight /></button><button className="button button--ghost" onClick={() => { setUnhookPrompt(0); setUnhookText(""); setUnhookSaved(false); }}><RotateCcw /> Clear</button></div>{unhookSaved && <div className="unhook-note"><CheckCircle2 /> You made space around the thought. The next step can be very small.</div>}</div>}
         </div>
+      </section>
+
+      <section className="support-deck panel" aria-labelledby="support-deck-title">
+        <header><div><span>LEARNING SUPPORT DECK</span><h2 id="support-deck-title">Pick scaffolding, not a label.</h2><p>These study lenses can help learners living with ADHD, anxiety, depression, trauma, sensory overload, dyslexia, or processing differences. They are practical preferences—not treatment or diagnosis.</p></div><span className="support-deck__privacy"><ShieldCheck /> Stays on this device</span></header>
+        <div className="support-deck__grid">{supportDeck.map(({ id, label, detail, strategy, icon: Icon }) => <button key={id} aria-pressed={state.preferences.supportMode === id} className={state.preferences.supportMode === id ? "support-card active" : "support-card"} onClick={() => updatePreferences({ supportMode: id })}><span><Icon /></span><div><strong>{label}</strong><small>{detail}</small><p>{strategy}</p></div>{state.preferences.supportMode === id ? <CheckCircle2 /> : <ArrowRight />}</button>)}</div>
+      </section>
+
+      <section className="friction-finder panel" aria-labelledby="friction-finder-title">
+        <div className="friction-finder__intro"><span>FRICTION FINDER</span><h2 id="friction-finder-title">What is making the doorway sticky?</h2><p>Choose the problem in front of you. MindWeather will translate it into one concrete door.</p></div>
+        <div className="friction-finder__choices">{Object.entries(frictionDoors).map(([id, item]) => { const Icon = item.icon; return <button key={id} className={friction === id ? "active" : ""} onClick={() => setFriction(id as FrictionId)}><Icon />{item.label}</button>; })}</div>
+        <div className={friction ? "friction-door is-open" : "friction-door"} aria-live="polite">{friction ? <><span><Sparkles /></span><div><small>YOUR NEXT DOOR</small><strong>{frictionDoors[friction].action}</strong></div><button className="button button--ghost" onClick={() => navigate("plan")}>Shape the plan <ArrowRight /></button></> : <p>Choose one kind of friction to reveal a next step.</p>}</div>
       </section>
 
       <div className="wellbeing-test-grid">

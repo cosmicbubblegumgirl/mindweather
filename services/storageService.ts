@@ -42,6 +42,7 @@ export function createAccountState(account: AccountProfile): AppState {
     assignments: [],
     notifications: [],
     wellbeingCheckins: [],
+    notebooks: [],
     dna: [],
     freezeMode: false,
     currentWeather: "breezy",
@@ -67,6 +68,7 @@ function normalize(value: Partial<AppState>, account: AccountProfile): AppState 
     assignments: value.assignments ?? [],
     notifications: value.notifications ?? [],
     wellbeingCheckins: value.wellbeingCheckins ?? [],
+    notebooks: value.notebooks ?? [],
     dna: value.dna ?? [],
   };
 }
