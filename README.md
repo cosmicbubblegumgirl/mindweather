@@ -8,6 +8,10 @@ MindWeather is a private, local-first study companion for changing brain days. I
 - **Plan** — turn the current workload into small, visible steps.
 - **Focus** — work in a contained session and reflect when it ends.
 - **Calendar** — see study work and read-only Google Calendar events together.
+- **Brain Weather Lab** — decide whether to settle, channel, understand, or work with today’s signals.
+- **Resource Compass** — follow a curated trail shaped by study path, live work, learning preferences, and weather.
+- **Printable Studio** — make a seven-day timetable or Mind Weather workbook and save it as PDF.
+- **Bloopy** — navigate the station, choose a next step, and optionally ask a sourced online question.
 - **Rescue tools** — use Anxiety Rescue, ADHD Rescue, and direct links to human support lines.
 
 The wider learning features and their saved data remain available to the guided flows, while the main navigation stays intentionally small.
@@ -15,6 +19,8 @@ The wider learning features and their saved data remain available to the guided 
 ## Privacy
 
 Supabase Auth verifies accounts, Postgres stores a protected workspace copy, and Row Level Security restricts every record to its owner. A per-user browser cache supports responsive and temporary offline use. Google Calendar access uses a separate short-lived browser session, requests read-only calendar permission, and does not edit or delete events.
+
+Bloopy&apos;s app navigation and planning shortcuts run in the browser. Open-ended answers use an authenticated Supabase Edge Function so the private OpenAI key never enters the static website. Web search is off until the learner switches it on, and source links are shown with searched answers. See [`BLOOPY.md`](BLOOPY.md) for the deployment and trust boundaries.
 
 ## Run locally
 

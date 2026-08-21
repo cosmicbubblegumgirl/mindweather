@@ -13,7 +13,7 @@ test("the landing page presents the simpler product story", async () => {
   assert.match(html, /MindWeather/i);
   assert.match(html, /Plan for the brain/i);
   assert.match(html, /Three steps\. No dashboard maze/i);
-  assert.match(html, /Four clear places/i);
+  assert.match(html, /Four anchors/i);
   assert.doesNotMatch(html, />Open MindWeather</i);
 });
 
@@ -71,4 +71,30 @@ test("Google sign-in never auto-selects an account and connected calendars auto-
 
 test("temporary preview files are absent", async () => {
   await assert.rejects(access(new URL("app/_sites-preview", root)));
+});
+
+test("the full MindWeather upgrade is wired into the protected station", async () => {
+  const shell = await readFile(new URL("../features/shell/AppShell.tsx", import.meta.url), "utf8");
+  const more = await readFile(new URL("../features/more/MoreView.tsx", import.meta.url), "utf8");
+  assert.match(shell, /BloopyCompanion/);
+  assert.match(shell, /BrainWeatherLab/);
+  assert.match(shell, /ResourceCompass/);
+  assert.match(shell, /PrintableStudio/);
+  assert.match(more, /Brain Weather Lab/);
+  assert.match(more, /Resource Compass/);
+  assert.match(more, /Printable Studio/);
+});
+
+test("Bloopy keeps private keys in an authenticated Edge Function and exposes web sources", async () => {
+  const client = await readFile(new URL("../services/bloopyService.ts", import.meta.url), "utf8");
+  const companion = await readFile(new URL("../features/bloopy/BloopyCompanion.tsx", import.meta.url), "utf8");
+  const edge = await readFile(new URL("../supabase/functions/bloopy/index.ts", import.meta.url), "utf8");
+  const guard = await readFile(new URL("../supabase/migrations/0002_bloopy.sql", import.meta.url), "utf8");
+  assert.match(client, /functions\.invoke.*bloopy/s);
+  assert.match(edge, /auth\.getUser\(\)/);
+  assert.match(edge, /OPENAI_API_KEY/);
+  assert.match(edge, /type: "web_search"/);
+  assert.match(edge, /store: false/);
+  assert.match(companion, /Sources used/);
+  assert.match(guard, /20/);
 });

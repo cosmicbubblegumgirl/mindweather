@@ -3,17 +3,21 @@
 import { Brand } from "@/components/brand/Brand";
 import { WeatherBackdrop } from "@/components/brand/WeatherBackdrop";
 import { CalendarView } from "@/features/calendar/CalendarView";
+import { BloopyCompanion } from "@/features/bloopy/BloopyCompanion";
 import { ConstellationView } from "@/features/constellation/ConstellationView";
 import { FocusView } from "@/features/focus/FocusView";
 import { ForecastView } from "@/features/forecast/ForecastView";
 import { GardenView } from "@/features/garden/GardenView";
 import { JournalView } from "@/features/journal/JournalView";
+import { BrainWeatherLab } from "@/features/lab/BrainWeatherLab";
 import { MobileInstallView } from "@/features/mobile/MobileInstallView";
 import { MoreView } from "@/features/more/MoreView";
 import { NotebookView } from "@/features/notebook/NotebookView";
 import { NotesView } from "@/features/notes/NotesView";
 import { PlanView } from "@/features/plan/PlanView";
+import { PrintableStudio } from "@/features/printables/PrintableStudio";
 import { ResearchSurveyView } from "@/features/research/ResearchSurveyView";
+import { ResourceCompass } from "@/features/resources/ResourceCompass";
 import { RoomsView } from "@/features/rooms/RoomsView";
 import { SettingsView } from "@/features/settings/SettingsView";
 import { StudyDNAView } from "@/features/study-dna/StudyDNAView";
@@ -38,6 +42,7 @@ const primaryNav = [
 
 const viewLabels: Record<ViewId, string> = {
   weather: "Today",
+  lab: "Brain Weather Lab",
   plan: "Plan",
   focus: "Focus",
   calendar: "Calendar",
@@ -50,6 +55,8 @@ const viewLabels: Record<ViewId, string> = {
   rooms: "Quiet Rooms",
   journal: "Journal",
   dna: "Study patterns",
+  resources: "Resource Compass",
+  printables: "Printable Studio",
   wellbeing: "Rescue tools",
   research: "Research Survey",
   mobile: "Mobile App",
@@ -59,6 +66,7 @@ const viewLabels: Record<ViewId, string> = {
 
 const componentMap: Record<ViewId, React.ComponentType<{ navigate?(view: ViewId): void }>> = {
   weather: WeatherStation,
+  lab: BrainWeatherLab,
   plan: PlanView,
   focus: FocusView,
   calendar: CalendarView,
@@ -71,6 +79,8 @@ const componentMap: Record<ViewId, React.ComponentType<{ navigate?(view: ViewId)
   rooms: RoomsView,
   journal: JournalView,
   dna: StudyDNAView,
+  resources: ResourceCompass,
+  printables: PrintableStudio,
   wellbeing: WellbeingView,
   research: ResearchSurveyView,
   mobile: MobileInstallView,
@@ -190,6 +200,7 @@ export function AppShell() {
           return <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => navigate(item.id)}><Icon /><span>{item.label}</span></button>;
         })}
       </nav>
+      <BloopyCompanion navigate={navigate} />
     </main>
   );
 }

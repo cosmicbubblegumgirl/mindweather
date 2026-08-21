@@ -12,15 +12,17 @@ npm install
 npm run dev
 ```
 
-The dev server prints the local URL. The app is usable immediately through the demo profile; no sign-in or external service is needed. Visit `/mobile` for the install steps for iOS and Android.
+The dev server prints the local URL. A configured Supabase project is required for account access and protected cloud state. Visit `/mobile` for the install steps for iOS and Android.
 
 ## Resetting local data
 
-Open Settings → Data to export, reset, or delete the current profile. For a manual reset, remove the `mindweather.local.v1` and `mindweather.local.accounts.v1` keys from the browser's local storage.
+Open Settings → Data to export, reset, or delete the current profile. The browser cache uses a per-user `mindweather.user.v2.*` key and syncs the protected workspace to Supabase after account verification.
 
-## Optional hosted setup
+## Supabase setup
 
-The local adapter is the default. If a future deployment enables Supabase, apply `supabase/migrations/0001_mindweather.sql`, then run `supabase/seed.sql` against a development project. Keep the service-role key server-only. The local planning engine remains available when no hosted services are configured.
+Apply the migrations in order, configure Google as an optional Supabase Auth provider, and set the public URL and publishable key in the website environment. Keep the service-role key server-only. The local planning engine and Bloopy&apos;s navigation shortcuts remain available when an online answer cannot be reached.
+
+For Bloopy, deploy `supabase/functions/bloopy`, set `OPENAI_API_KEY` and `SITE_URL` as Edge Function secrets, and optionally set `OPENAI_MODEL`. The function validates the signed-in user itself, limits each account to 20 requests per ten-minute window, sends only a small study context, and asks the OpenAI Responses API not to store the response. Full commands are in [`BLOOPY.md`](BLOOPY.md).
 
 ## Verification
 

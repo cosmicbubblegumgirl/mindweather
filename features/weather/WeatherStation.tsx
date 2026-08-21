@@ -4,7 +4,7 @@ import { Bloop } from "@/components/brand/Bloop";
 import { useMindWeather } from "@/hooks/useMindWeather";
 import type { ViewId, WeatherId } from "@/lib/types";
 import { suggestWeather, WEATHER, weatherMessage } from "@/lib/weather";
-import { Activity, BatteryLow, Check, ChevronRight, CloudFog, CloudLightning, Focus, HeartPulse, Sun, Wind, X, Zap } from "lucide-react";
+import { Activity, BatteryLow, Check, ChevronRight, CloudFog, CloudLightning, Compass, FlaskConical, Focus, HeartPulse, Sun, Wind, X, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
@@ -41,6 +41,8 @@ export function WeatherStation({ navigate = () => undefined }: { navigate?(view:
 
         <div className="weather-tools simple-weather-tools">
           <div className="rescue-shortcuts" aria-label="Quick support tools">
+            <button className="anxiety-button anxiety-button--inline" onClick={() => navigate("lab")}><span><FlaskConical /><strong>Brain Weather Lab</strong><small>Decide what you need from this weather.</small></span><ChevronRight /></button>
+            <button className="anxiety-button anxiety-button--inline" onClick={() => navigate("resources")}><span><Compass /><strong>Resource Compass</strong><small>Follow a trail matched to your study path.</small></span><ChevronRight /></button>
             <button className="anxiety-button anxiety-button--inline" onClick={() => navigate("wellbeing")}><span><HeartPulse /><strong>Anxiety Rescue</strong><small>Breathe, ground, or untangle a thought.</small></span><ChevronRight /></button>
             <button className="anxiety-button anxiety-button--inline" onClick={() => navigate("wellbeing")}><span><Activity /><strong>ADHD Rescue</strong><small>Find one visible step and restart gently.</small></span><ChevronRight /></button>
           </div>

@@ -38,6 +38,7 @@
     "tools",
     "wobbly-compass-pages",
     "db/index.ts",
+    "supabase/functions/bloopy/index.ts",
     "worker"
   ]
 }
