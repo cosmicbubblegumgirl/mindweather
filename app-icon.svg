@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(160 120) rotate(48) scale(500)"><stop stop-color="#282251"/><stop offset="1" stop-color="#090817"/></radialGradient>
+    <linearGradient id="mw" x1="90" y1="110" x2="410" y2="395" gradientUnits="userSpaceOnUse"><stop stop-color="#9DEDE2"/><stop offset="0.52" stop-color="#9F8CFF"/><stop offset="1" stop-color="#FFB38B"/></linearGradient>
+    <mask id="cut"><rect width="512" height="512" fill="white"/><path d="M142 319L199 241L253 316L317 229L374 314" stroke="black" stroke-width="39" stroke-linecap="round" stroke-linejoin="round"/><circle cx="369" cy="171" r="16" fill="black"/></mask>
+  </defs>
+  <rect x="22" y="22" width="468" height="468" rx="124" fill="url(#bg)"/>
+  <path d="M110 365C67 365 32 330 32 287C32 248 61 216 98 210C108 142 167 89 238 89C297 89 347 125 368 176C424 180 469 227 469 284C469 343 422 365 365 365H110Z" fill="url(#mw)" mask="url(#cut)"/>
+  <path d="M84 392C178 460 342 444 429 351" stroke="#D9D3FF" stroke-width="13" stroke-linecap="round" stroke-dasharray="10 30"/><circle cx="429" cy="351" r="19" fill="#FFF3D7"/>
+</svg>
