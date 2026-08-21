@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "output/**",
     "docx_work/**",
     "wobbly-compass-pages/**",
+    "supabase/functions/**",
   ]),
 ]);
 

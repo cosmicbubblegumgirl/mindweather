@@ -3,6 +3,7 @@ import { Providers } from "./providers";
 import "./globals.css";
 import "./calendar.css";
 import "./calm.css";
+import "./upgrade.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 

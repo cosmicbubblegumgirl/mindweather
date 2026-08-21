@@ -29,6 +29,7 @@ export type ReadingMode = "standard" | "open-letter" | "hyperlegible";
 
 export type ViewId =
   | "weather"
+  | "lab"
   | "plan"
   | "focus"
   | "constellation"
@@ -41,6 +42,8 @@ export type ViewId =
   | "rooms"
   | "journal"
   | "dna"
+  | "resources"
+  | "printables"
   | "wellbeing"
   | "research"
   | "mobile"
